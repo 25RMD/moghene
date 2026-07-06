@@ -160,7 +160,7 @@ h2 { font-family: var(--display); font-weight: 400; }
 .materials-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 7vw 5vw; }
 .materials-copy h2 { margin: 28px 0 25px; font-size: clamp(4.4rem, 7.7vw, 8.3rem); line-height: .86; letter-spacing: -.06em; text-transform: uppercase; }
 .materials-copy p { max-width: 430px; margin: 0 0 38px; color: rgba(255,255,255,.62); line-height: 1.75; }
-.materials-texture { min-height: 680px; background: #1d293e url("/textile-moghene.png") center / cover no-repeat; filter: saturate(.82) contrast(1.08); }
+.materials-texture { min-height: 680px; background: #1d293e url("/textile-moghene.webp") center / cover no-repeat; filter: saturate(.82) contrast(1.08); }
 .materials-catalog { padding: 58px 3.2vw 78px; }
 .materials-catalog > header { display: flex; align-items: end; justify-content: space-between; gap: 40px; margin-bottom: 26px; }
 .materials-catalog h3 { margin: 10px 0 0; font-family: var(--display); font-size: clamp(2.2rem, 4vw, 4.5rem); font-weight: 400; line-height: 1; }
@@ -170,7 +170,7 @@ h2 { font-family: var(--display); font-weight: 400; }
 .materials-filters button.active { border-color: var(--ink); }
 
 .tailoring-school { display: grid; grid-template-columns: 57% 43%; background: var(--paper); color: var(--ink); }
-.school-visual { position: relative; min-height: 760px; overflow: hidden; background: #a29b91 url("/tailoring-school-section.png") left top / auto 133% no-repeat; }
+.school-visual { position: relative; min-height: 760px; overflow: hidden; background: #a29b91 url("/tailoring-school-section.webp") left top / auto 133% no-repeat; }
 .school-visual::after { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(10,10,9,.55), transparent 45%); content: ""; }
 .school-visual > span { position: absolute; z-index: 1; bottom: 46px; left: 4vw; color: white; font-family: var(--display); font-size: clamp(2rem, 3.4vw, 4rem); line-height: 1.03; text-shadow: 0 2px 22px rgba(0,0,0,.36); }
 .school-panel { display: flex; min-width: 0; flex-direction: column; justify-content: center; padding: 7vw 5vw; background: var(--paper); }

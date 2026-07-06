@@ -24,7 +24,7 @@ import { currency } from "./format.js";
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "2348012345678";
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL || "hello@moghene.com";
-const HERO_ASSET = `${import.meta.env.BASE_URL}hero-moghene.png`;
+const HERO_ASSET = `${import.meta.env.BASE_URL}hero-moghene.webp`;
 const DEFAULT_SCHOOL = {
   eyebrow: "Moghene tailoring school / Abuja",
   title: "From first cut to final form.",
@@ -396,7 +396,7 @@ function ShopPage({ products, categories: availableCategories, loading, error, a
           <h1>Shop all.</h1>
           <p>Premade Nigerian pieces, available for immediate ordering.</p>
         </div>
-        {products[0] ? <img src={products[0].image} alt={products[0].name} /> : null}
+        {products[0] ? <img src={products[0].image} alt={products[0].name} loading="eager" decoding="async" fetchPriority="high" /> : null}
       </section>
       <section className="shop-workspace">
         <div className="shop-toolbar">
@@ -448,7 +448,7 @@ function ProductCard({ product, addToCart, priority, compact = false }) {
   return (
     <motion.article className={`product-card ${compact ? "product-card-compact" : ""}`} variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
       <div className="product-image-wrap">
-        <img src={product.image} alt={product.name} loading={priority ? "eager" : "lazy"} />
+        <img src={product.image} alt={product.name} loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority ? "high" : "auto"} />
       </div>
       <div className="product-title-row">
         <div><p>{product.category}</p><h3>{product.name}</h3></div>
@@ -547,18 +547,18 @@ function LookbookPage({ products, lookbook, navigate }) {
               <h2>{chapter.number}. {chapter.title}</h2>
               <p>{chapter.copy}</p>
               <div className="shop-the-look">
-                <img src={chapter.product.image} alt="" />
+                <img src={chapter.product.image} alt="" loading="lazy" decoding="async" />
                 <div><strong>{chapter.product.name}</strong><span>{currency(chapter.product.price)}</span></div>
               </div>
               <button className="button button-outline-light" type="button" onClick={() => navigate("shop")}>Shop this look <ArrowRight size={16} /></button>
             </div>
-            <div className="chapter-image"><img src={chapter.product.image} alt={chapter.product.name} /></div>
+            <div className="chapter-image"><img src={chapter.product.image} alt={chapter.product.name} loading="lazy" decoding="async" /></div>
           </article>
         ))}
       </section>
       <section className="lookbook-finale">
         <div className="finale-images">
-          {looks.slice(0, 5).map((product) => <img src={product.image} alt={product.name} key={product.id} />)}
+          {looks.slice(0, 5).map((product) => <img src={product.image} alt={product.name} key={product.id} loading="lazy" decoding="async" />)}
         </div>
         <div><span className="eyebrow">{lookbook.finaleEyebrow}</span><h2>{lookbook.finaleTitle}</h2><button className="button button-brass" onClick={() => navigate("shop")}>Discover the collection</button></div>
       </section>
@@ -613,7 +613,7 @@ function CartDrawer({ cart, open, onClose, changeQuantity, removeItem, clearCart
             <div className="cart-items">
               {cart.length ? cart.map((item) => (
                 <article className="cart-item" key={`${item.productId}-${item.size}`}>
-                  <img src={item.image} alt={item.name} />
+                  <img src={item.image} alt={item.name} loading="lazy" decoding="async" />
                   <div className="cart-item-copy"><h3>{item.name}</h3><p>{item.productType === "garment" || !item.productType ? `Size ${item.size}` : `Sold per ${item.unit}`}</p><strong>{currency(item.price * item.quantity)}</strong><div className="quantity-control"><button type="button" onClick={() => changeQuantity(item.productId, item.size, -1)}><Minus size={14} /></button><span>{item.quantity}</span><button type="button" onClick={() => changeQuantity(item.productId, item.size, 1)}><Plus size={14} /></button></div></div>
                   <button className="remove-item" type="button" onClick={() => removeItem(item.productId, item.size)} aria-label={`Remove ${item.name}`}><Trash2 size={16} /></button>
                 </article>
@@ -648,7 +648,7 @@ function SearchOverlay({ open, products, onClose, addToCart }) {
             <label><Search /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="What are you looking for?" /></label>
             <div className="search-results">
               {query && !results.length ? <p>No matching pieces yet.</p> : null}
-              {results.map((product) => <article key={product.id}><img src={product.image} alt={product.name} /><div><h3>{product.name}</h3><p>{product.category} · {currency(product.price)}</p><button type="button" onClick={() => addToCart(product)}>Quick add <Plus size={14} /></button></div></article>)}
+              {results.map((product) => <article key={product.id}><img src={product.image} alt={product.name} loading="lazy" decoding="async" /><div><h3>{product.name}</h3><p>{product.category} · {currency(product.price)}</p><button type="button" onClick={() => addToCart(product)}>Quick add <Plus size={14} /></button></div></article>)}
             </div>
           </div>
         </motion.div>

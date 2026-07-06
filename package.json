@@ -1,0 +1,17 @@
+{
+  "name": "moghene",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "admin",
+    "backend"
+  ],
+  "scripts": {
+    "frontend:dev": "npm --workspace frontend run dev",
+    "frontend:build": "npm --workspace frontend run build",
+    "admin:dev": "npm --workspace admin run dev",
+    "admin:build": "npm --workspace admin run build",
+    "backend:dev": "npm --workspace backend run dev",
+    "backend:start": "npm --workspace backend run start"
+  }
+}

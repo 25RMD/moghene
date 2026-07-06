@@ -1,0 +1,41 @@
+{
+  "id": "entrance-season",
+  "eyebrow": "Lookbook 01 / 2026",
+  "title": "The entrance season.",
+  "manifestoTitle": "A study of presence, heritage and modern Nigerian form.",
+  "manifestoCopy": "This is an entrance into a new season of Moghene—where craft meets clarity. Each piece is a language of culture, cut for today, made to be remembered.",
+  "heroProductId": "nara-adire-dress",
+  "published": true,
+  "chapters": [
+    {
+      "id": "arrival",
+      "number": "I",
+      "title": "Arrival",
+      "copy": "First light. New day. Designed for entrances that set the tone.",
+      "productId": "ada-iro-buba"
+    },
+    {
+      "id": "rooted",
+      "number": "II",
+      "title": "Rooted",
+      "copy": "Heritage in full form. Grounded silhouettes. Living traditions.",
+      "productId": "eko-agbada"
+    },
+    {
+      "id": "after-dark",
+      "number": "III",
+      "title": "After dark",
+      "copy": "Evening ease. Sculptural shapes and deeper tones for unforgettable moments.",
+      "productId": "ayo-wrapper-set"
+    }
+  ],
+  "finaleEyebrow": "One season. Many expressions.",
+  "finaleTitle": "Always Moghene.",
+  "finaleProductIds": [
+    "ada-iro-buba",
+    "zaria-kaftan",
+    "eko-agbada",
+    "nara-adire-dress",
+    "ayo-wrapper-set"
+  ]
+}

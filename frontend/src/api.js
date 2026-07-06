@@ -1,4 +1,6 @@
-export const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
+export const API_URL = (
+  import.meta.env.VITE_API_URL || "https://moghene-backend-production.up.railway.app/api/v1"
+).replace(/\/$/, "");
 
 export async function fetchCatalog() {
   const response = await fetch(`${API_URL}/catalog`);

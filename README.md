@@ -41,3 +41,15 @@ node --check backend/src/server.js
 
 Copy each `.env.example` to `.env` and replace all placeholder credentials,
 store contact details, URLs, and allowed origins before deployment.
+
+The production backend is currently:
+
+```bash
+https://moghene-backend-production.up.railway.app
+```
+
+Frontend and admin builds should use:
+
+```bash
+VITE_API_URL=https://moghene-backend-production.up.railway.app/api/v1
+```

@@ -152,8 +152,33 @@ h2 { font-family: var(--display); font-weight: 400; }
 .section-link { margin-top: 30px; }
 .text-link { display: inline-flex; align-items: center; gap: 12px; padding: 9px 0; border: 0; border-bottom: 1px solid currentColor; background: transparent; cursor: pointer; font-size: .64rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 .light-link { color: white; }
-.product-skeleton { aspect-ratio: 3/4.6; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: linear-gradient(100deg, #ded8cc 20%, #f2eee5 40%, #ded8cc 60%); background-size: 200% 100%; animation: skeleton 1.3s infinite linear; }
-@keyframes skeleton { to { background-position: -200% 0; } }
+.product-grid-skeleton { pointer-events: none; }
+.product-skeleton-card { min-height: 100%; }
+.skeleton-block,
+.skeleton-line,
+.skeleton-size-row i,
+.skeleton-button {
+  display: block;
+  overflow: hidden;
+  background: linear-gradient(100deg, #d9d2c6 0%, #eee9df 38%, #d4ccbf 72%);
+  background-size: 220% 100%;
+  animation: skeleton 1.45s infinite linear;
+}
+.skeleton-block::after { display: none; }
+.skeleton-line { height: 9px; }
+.skeleton-kicker { width: 42%; margin: 0 0 10px; }
+.skeleton-name { width: min(78%, 220px); height: 18px; }
+.skeleton-price { width: 58px; height: 10px; margin-top: 4px; flex: 0 0 auto; }
+.skeleton-copy { width: 82%; height: 10px; margin: 2px 4px 18px; }
+.skeleton-size-row i { width: 29px; height: 28px; }
+.skeleton-button { min-height: 42px; margin-top: auto; border: 1px solid rgba(22,22,20,.24); background-color: transparent; }
+.product-card-compact .skeleton-kicker,
+.product-card-compact .skeleton-copy { display: none; }
+.product-card-compact .skeleton-name { width: 72%; height: 10px; }
+.product-card-compact .skeleton-price { width: 44px; height: 9px; margin-top: 9px; }
+.product-card-compact .skeleton-size-row i { width: 23px; height: 22px; }
+.product-card-compact .skeleton-button { min-height: 33px; }
+@keyframes skeleton { to { background-position: -220% 0; } }
 
 .materials-section { background: var(--paper); }
 .materials-intro { display: grid; grid-template-columns: 41% 59%; min-height: 680px; background: var(--ink); color: white; }

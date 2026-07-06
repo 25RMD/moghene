@@ -429,7 +429,7 @@ function ShopPage({ products, categories: availableCategories, loading, error, a
 }
 
 function ProductGrid({ products, loading, error, addToCart, spacious = false, compact = false }) {
-  if (loading) return <CatalogSkeleton />;
+  if (loading) return <CatalogSkeleton spacious={spacious} compact={compact} count={compact ? 4 : 6} />;
   if (error) return <div className="catalog-message error"><span>Catalog unavailable</span><p>{error}</p></div>;
   if (!products.length) return <div className="catalog-message"><span>No pieces found</span><p>Try another collection or search term.</p></div>;
 
@@ -516,8 +516,32 @@ function TailoringSchoolSection({ school = DEFAULT_SCHOOL }) {
   );
 }
 
-function CatalogSkeleton() {
-  return <div className="product-grid">{Array.from({ length: 6 }, (_, index) => <div className="product-skeleton" key={index} />)}</div>;
+function CatalogSkeleton({ spacious = false, compact = false, count = 6 }) {
+  return (
+    <div
+      className={`product-grid product-grid-skeleton ${spacious ? "product-grid-spacious" : ""} ${compact ? "product-grid-compact" : ""}`}
+      aria-label="Loading collection"
+      aria-live="polite"
+    >
+      {Array.from({ length: count }, (_, index) => (
+        <article className={`product-card product-skeleton-card ${compact ? "product-card-compact" : ""}`} key={index}>
+          <div className="product-image-wrap skeleton-block" />
+          <div className="product-title-row">
+            <div>
+              <i className="skeleton-line skeleton-kicker" />
+              <i className="skeleton-line skeleton-name" />
+            </div>
+            <i className="skeleton-line skeleton-price" />
+          </div>
+          <i className="skeleton-line skeleton-copy" />
+          <div className="size-row skeleton-size-row">
+            <i /><i /><i />
+          </div>
+          <i className="quick-add skeleton-button" />
+        </article>
+      ))}
+    </div>
+  );
 }
 
 function LookbookPage({ products, lookbook, navigate }) {

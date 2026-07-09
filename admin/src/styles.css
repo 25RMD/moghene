@@ -148,6 +148,12 @@ img { display: block; max-width: 100%; }
 .editor-preview { position: relative; height: 210px; overflow: hidden; background: #d8d1c6; }
 .editor-preview img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
 .editor-preview span { position: absolute; bottom: 0; left: 0; padding: 7px 10px; background: var(--ink); color: white; font-size: .52rem; text-transform: uppercase; }
+.image-upload-field { display: grid; gap: 13px; }
+.upload-dropzone { display: grid; gap: 7px; padding: 18px; border: 1px dashed rgba(21,20,18,.35); background: rgba(255,255,255,.34); cursor: pointer; transition: border-color .18s ease, background .18s ease; }
+.upload-dropzone:hover { border-color: var(--brass); background: rgba(181,154,90,.08); }
+.upload-dropzone input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.upload-dropzone span { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.upload-dropzone small { color: rgba(21,20,18,.58); font-size: .72rem; line-height: 1.45; }
 .editor-visibility { display: block !important; }
 .editor-visibility > input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .editor-visibility > span { display: flex; align-items: center; gap: 10px; cursor: pointer; }

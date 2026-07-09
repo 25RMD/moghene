@@ -2,10 +2,12 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import jwt from "jsonwebtoken";
+import multer from "multer";
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { v2 as cloudinary } from "cloudinary";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +21,9 @@ const JWT_SECRET = process.env.JWT_SECRET || "moghene-dev-secret";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@moghene.test";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "moghene2026";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const CLOUDINARY_CLOUD_NAME = cleanEnvValue(process.env.CLOUDINARY_CLOUD_NAME);
+const CLOUDINARY_API_KEY = cleanEnvValue(process.env.CLOUDINARY_API_KEY);
+const CLOUDINARY_API_SECRET = cleanEnvValue(process.env.CLOUDINARY_API_SECRET);
 
 function cleanEnvValue(value) {
   return String(value || "")
@@ -32,6 +37,26 @@ const ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "http://localhost:
   .filter(Boolean);
 
 const app = express();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter(_request, file, callback) {
+    if (file.mimetype?.startsWith("image/")) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error("Only image uploads are supported."));
+  },
+});
+
+if (CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+}
 
 function isLocalDevelopmentOrigin(origin) {
   if (IS_PRODUCTION) {
@@ -242,6 +267,32 @@ function authRequired(request, response, next) {
   }
 }
 
+function cloudinaryReady() {
+  return Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET);
+}
+
+function uploadBufferToCloudinary(file, folder = "moghene/products") {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image",
+        overwrite: false,
+        transformation: [{ quality: "auto", fetch_format: "auto" }],
+      },
+      (error, result) => {
+        if (error || !result) {
+          reject(error || new Error("Cloudinary upload failed."));
+          return;
+        }
+        resolve(result);
+      },
+    );
+
+    stream.end(file.buffer);
+  });
+}
+
 app.get("/health", (_request, response) => {
   response.json({ ok: true });
 });
@@ -307,6 +358,36 @@ app.post("/api/v1/admin/logout", (_request, response) => {
 
 app.get("/api/v1/admin/me", authRequired, (request, response) => {
   response.json({ admin: { email: request.admin.email } });
+});
+
+app.post("/api/v1/admin/uploads", authRequired, upload.single("image"), async (request, response, next) => {
+  try {
+    if (!cloudinaryReady()) {
+      response.status(503).json({ message: "Cloudinary is not configured on the backend yet." });
+      return;
+    }
+
+    if (!request.file) {
+      response.status(400).json({ message: "Choose an image file to upload." });
+      return;
+    }
+
+    const folder = cleanEnvValue(request.body?.folder) || "moghene/products";
+    const result = await uploadBufferToCloudinary(request.file, folder);
+    response.status(201).json({
+      asset: {
+        url: result.secure_url,
+        secureUrl: result.secure_url,
+        publicId: result.public_id,
+        width: result.width,
+        height: result.height,
+        format: result.format,
+        bytes: result.bytes,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get("/api/v1/admin/items", authRequired, async (_request, response, next) => {
@@ -544,7 +625,8 @@ app.delete("/api/v1/admin/items/:id", authRequired, async (request, response, ne
 
 app.use((error, _request, response, _next) => {
   const message = error instanceof Error ? error.message : "Something went wrong.";
-  response.status(500).json({ message });
+  const isUploadError = error instanceof multer.MulterError || message === "Only image uploads are supported.";
+  response.status(isUploadError ? 400 : 500).json({ message });
 });
 
 app.listen(PORT, HOST, () => {

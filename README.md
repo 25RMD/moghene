@@ -53,3 +53,17 @@ Frontend and admin builds should use:
 ```bash
 VITE_API_URL=https://moghene-backend-production.up.railway.app/api/v1
 ```
+
+## Cloudinary uploads
+
+The admin item editor can upload product images through the backend to
+Cloudinary. Add these variables to the Railway backend service:
+
+```bash
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+```
+
+Uploads are available from the admin product editor. Manual image URLs still
+work as a fallback.

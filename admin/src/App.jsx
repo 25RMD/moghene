@@ -36,6 +36,7 @@ import {
   updateItem,
   updateLookbook,
   updateSchool,
+  uploadImage,
 } from "./api.js";
 import { currency } from "./format.js";
 
@@ -383,6 +384,28 @@ function ItemRow({ product, busy, onEdit, onToggle, onDelete }) {
 }
 
 function ProductEditor({ draft, setDraft, categories, editingId, submitting, notice, onSubmit, onClose }) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  async function handleImageUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setUploadError("");
+      const payload = await uploadImage(file);
+      const url = payload.asset?.secureUrl || payload.asset?.url;
+      if (!url) throw new Error("Cloudinary did not return an image URL.");
+      setDraft((current) => ({ ...current, image: url }));
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Unable to upload this image.");
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  }
+
   return (
     <motion.aside className="editor-layer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <button className="editor-scrim" onClick={onClose} aria-label="Close editor" />
@@ -394,7 +417,15 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
           <div className="editor-pair"><label><span>Price</span><input required type="number" min="1" placeholder="85000" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></label><label><span>Category</span><select required value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}><option value="" disabled>Select category</option>{categories.map((item) => <option value={item.name} key={item.id}>{item.name}</option>)}</select></label></div>
           <div className="editor-pair"><label><span>Item type</span><select value={draft.productType} onChange={(event) => { const productType = event.target.value; setDraft({ ...draft, productType, unit: productType === "fabric" ? "yard" : "piece", sizes: productType === "garment" ? draft.sizes || "S, M, L" : "" }); }}><option value="garment">Garment</option><option value="fabric">Fabric</option><option value="accessory">Accessory</option></select></label><label><span>Sales unit</span><select value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })}><option value="piece">Piece</option><option value="yard">Yard</option><option value="set">Set</option><option value="pair">Pair</option></select></label></div>
           <div className="editor-pair">{draft.productType === "garment" ? <label><span>Sizes</span><input required placeholder="S, M, L" value={draft.sizes} onChange={(event) => setDraft({ ...draft, sizes: event.target.value })} /></label> : <label><span>Order quantity</span><input disabled value={`Sold per ${draft.unit}`} /></label>}<label><span>Color</span><input required placeholder="Indigo" value={draft.color} onChange={(event) => setDraft({ ...draft, color: event.target.value })} /></label></div>
-          <label><span>Image URL or site asset</span><input required type="text" placeholder="https://… or /image.png" value={draft.image} onChange={(event) => setDraft({ ...draft, image: event.target.value })} /></label>
+          <div className="image-upload-field">
+            <label><span>Image URL or site asset</span><input required type="text" placeholder="https://… or /image.png" value={draft.image} onChange={(event) => setDraft({ ...draft, image: event.target.value })} /></label>
+            <label className="upload-dropzone">
+              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
+              <span>{uploading ? "Uploading to Cloudinary…" : "Upload image to Cloudinary"}</span>
+              <small>JPG, PNG or WebP up to 8MB. The secure URL fills in automatically.</small>
+            </label>
+            {uploadError ? <p className="admin-error">{uploadError}</p> : null}
+          </div>
           <label><span>Description</span><textarea required placeholder="Describe the cut, textile and finish." value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
           <label className="editor-visibility"><input type="checkbox" checked={draft.available} onChange={(event) => setDraft({ ...draft, available: event.target.checked })} /><span><i>{draft.available ? <Check size={13} /> : null}</i> Visible in storefront</span></label>
           {notice ? <p className="admin-error">{notice}</p> : null}

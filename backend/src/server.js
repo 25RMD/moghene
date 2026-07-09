@@ -18,9 +18,16 @@ const JWT_SECRET = process.env.JWT_SECRET || "moghene-dev-secret";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@moghene.test";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "moghene2026";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+function cleanEnvValue(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^['"]|['"]$/g, "");
+}
+
 const ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "http://localhost:5173,http://localhost:5174")
   .split(",")
-  .map((item) => item.trim())
+  .map((item) => cleanEnvValue(item))
   .filter(Boolean);
 
 const app = express();

@@ -363,7 +363,7 @@ h2 { font-family: var(--display); font-weight: 400; }
   .header-actions { justify-self: end; }
   .header-actions button { padding: 0; }
   .header-actions button span { display: none; }
-  .home-hero { min-height: 760px; padding: 145px 22px 55px; align-items: flex-end; background-position: 61% center; }
+  .home-hero { min-height: 100vh; min-height: 100svh; padding: 145px 22px 55px; align-items: flex-end; background-position: 61% center; }
   .hero-shade { background: linear-gradient(0deg, rgba(5,5,5,.9) 0%, rgba(5,5,5,.4) 60%, rgba(5,5,5,.1)); }
   .hero-content h1 { font-size: clamp(3.4rem, 17vw, 5.3rem); }
   .hero-summary { max-width: 310px; font-size: .82rem; }

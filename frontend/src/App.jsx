@@ -24,7 +24,7 @@ import { currency } from "./format.js";
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "2348012345678";
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL || "hello@moghene.com";
-const HERO_ASSET = `${import.meta.env.BASE_URL}hero-moghene.webp`;
+const HERO_ASSET = "/hero-moghene.webp";
 const DEFAULT_SCHOOL = {
   eyebrow: "Moghene tailoring school / Abuja",
   title: "From first cut to final form.",
@@ -396,7 +396,7 @@ function ShopPage({ products, categories: availableCategories, loading, error, a
           <h1>Shop all.</h1>
           <p>Premade Nigerian pieces, available for immediate ordering.</p>
         </div>
-        {products[0] ? <img src={products[0].image} alt={products[0].name} loading="eager" decoding="async" fetchPriority="high" /> : null}
+        {products[0] ? <img src={products[0].image} alt={products[0].name} loading="eager" decoding="async" fetchpriority="high" /> : null}
       </section>
       <section className="shop-workspace">
         <div className="shop-toolbar">
@@ -448,7 +448,7 @@ function ProductCard({ product, addToCart, priority, compact = false }) {
   return (
     <motion.article className={`product-card ${compact ? "product-card-compact" : ""}`} variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
       <div className="product-image-wrap">
-        <img src={product.image} alt={product.name} loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority ? "high" : "auto"} />
+        <img src={product.image} alt={product.name} loading={priority ? "eager" : "lazy"} decoding="async" fetchpriority={priority ? "high" : "auto"} />
       </div>
       <div className="product-title-row">
         <div><p>{product.category}</p><h3>{product.name}</h3></div>

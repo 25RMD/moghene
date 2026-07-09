@@ -14,6 +14,7 @@ const CATEGORIES_FILE = path.resolve(__dirname, "../data/categories.json");
 const LOOKBOOK_FILE = path.resolve(__dirname, "../data/lookbook.json");
 const SCHOOL_FILE = path.resolve(__dirname, "../data/school.json");
 const PORT = Number(process.env.PORT || 5000);
+const HOST = process.env.HOST || "0.0.0.0";
 const JWT_SECRET = process.env.JWT_SECRET || "moghene-dev-secret";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@moghene.test";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "moghene2026";
@@ -546,6 +547,6 @@ app.use((error, _request, response, _next) => {
   response.status(500).json({ message });
 });
 
-app.listen(PORT, () => {
-  console.log(`Moghene API listening on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Moghene API listening on http://${HOST}:${PORT}`);
 });

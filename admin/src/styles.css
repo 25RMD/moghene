@@ -17,7 +17,8 @@
   --red: #d56166;
   --line: rgba(242, 238, 229, .16);
   --line-strong: rgba(242, 238, 229, .28);
-  --display: "Italiana", Didot, "Bodoni MT", serif;
+  --wordmark: "Italiana", Didot, "Bodoni MT", serif;
+  --display: "Signifier", "Signifier Web", "Canela", "IvyPresto Display", "Times New Roman", serif;
 }
 
 * { box-sizing: border-box; }
@@ -29,7 +30,8 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 a { text-decoration: none; }
 img { display: block; max-width: 100%; }
 ::selection { background: var(--brass); color: var(--ink); }
-.admin-wordmark, h1, h2 { font-family: var(--display); font-weight: 400; }
+.admin-wordmark { font-family: var(--wordmark); font-weight: 400; }
+h1, h2 { font-family: var(--display); font-weight: 400; }
 .admin-wordmark { margin: 0; font-size: clamp(2rem, 2.7vw, 2.8rem); line-height: 1; letter-spacing: -.055em; text-transform: uppercase; }
 .admin-eyebrow { color: var(--brass); font-size: .59rem; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
 .admin-error { margin: 0; color: #d97c80; font-size: .72rem; line-height: 1.5; }

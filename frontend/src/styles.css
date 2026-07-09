@@ -16,7 +16,8 @@
   --brass: #b59a5a;
   --muted: #77716a;
   --line: rgba(21, 20, 18, 0.2);
-  --display: "Italiana", Didot, "Bodoni MT", serif;
+  --wordmark: "Italiana", Didot, "Bodoni MT", serif;
+  --display: "Signifier", "Signifier Web", "Canela", "IvyPresto Display", "Times New Roman", serif;
 }
 
 * { box-sizing: border-box; }
@@ -31,7 +32,7 @@ img { display: block; max-width: 100%; }
 ::selection { background: var(--indigo); color: white; }
 .site-shell { min-height: 100vh; overflow: clip; }
 
-.wordmark,
+.wordmark { font-family: var(--wordmark); font-weight: 400; }
 h1,
 h2 { font-family: var(--display); font-weight: 400; }
 

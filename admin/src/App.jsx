@@ -422,7 +422,7 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
             <label className="upload-dropzone">
               <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
               <span>{uploading ? "Uploading to Cloudinary…" : "Upload image to Cloudinary"}</span>
-              <small>JPG, PNG or WebP up to 8MB. The secure URL fills in automatically.</small>
+              <small>JPG, PNG or WebP up to 8MB. Images are compressed to WebP before Cloudinary stores them.</small>
             </label>
             {uploadError ? <p className="admin-error">{uploadError}</p> : null}
           </div>

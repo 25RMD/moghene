@@ -8,6 +8,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { v2 as cloudinary } from "cloudinary";
+import sharp from "sharp";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +25,9 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const CLOUDINARY_CLOUD_NAME = cleanEnvValue(process.env.CLOUDINARY_CLOUD_NAME);
 const CLOUDINARY_API_KEY = cleanEnvValue(process.env.CLOUDINARY_API_KEY);
 const CLOUDINARY_API_SECRET = cleanEnvValue(process.env.CLOUDINARY_API_SECRET);
+const UPLOAD_MAX_WIDTH = Number(process.env.UPLOAD_MAX_WIDTH || 1800);
+const UPLOAD_MAX_HEIGHT = Number(process.env.UPLOAD_MAX_HEIGHT || 2200);
+const UPLOAD_WEBP_QUALITY = Number(process.env.UPLOAD_WEBP_QUALITY || 82);
 
 function cleanEnvValue(value) {
   return String(value || "")
@@ -271,14 +275,48 @@ function cloudinaryReady() {
   return Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET);
 }
 
-function uploadBufferToCloudinary(file, folder = "moghene/products") {
+async function compressImageForUpload(file) {
+  try {
+    const input = sharp(file.buffer, { failOn: "none" }).rotate();
+    const metadata = await input.metadata();
+    const buffer = await input
+      .resize({
+        width: UPLOAD_MAX_WIDTH,
+        height: UPLOAD_MAX_HEIGHT,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({
+        quality: UPLOAD_WEBP_QUALITY,
+        effort: 5,
+        smartSubsample: true,
+      })
+      .toBuffer();
+
+    const outputMetadata = await sharp(buffer).metadata();
+
+    return {
+      buffer,
+      originalBytes: file.size,
+      compressedBytes: buffer.length,
+      originalFormat: metadata.format || file.mimetype,
+      width: outputMetadata.width,
+      height: outputMetadata.height,
+      format: "webp",
+    };
+  } catch {
+    throw new Error("Unable to compress this image. Try a JPG, PNG, or WebP file.");
+  }
+}
+
+function uploadBufferToCloudinary(image, folder = "moghene/products") {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder,
         resource_type: "image",
+        format: "webp",
         overwrite: false,
-        transformation: [{ quality: "auto", fetch_format: "auto" }],
       },
       (error, result) => {
         if (error || !result) {
@@ -289,7 +327,7 @@ function uploadBufferToCloudinary(file, folder = "moghene/products") {
       },
     );
 
-    stream.end(file.buffer);
+    stream.end(image.buffer);
   });
 }
 
@@ -373,7 +411,8 @@ app.post("/api/v1/admin/uploads", authRequired, upload.single("image"), async (r
     }
 
     const folder = cleanEnvValue(request.body?.folder) || "moghene/products";
-    const result = await uploadBufferToCloudinary(request.file, folder);
+    const compressed = await compressImageForUpload(request.file);
+    const result = await uploadBufferToCloudinary(compressed, folder);
     response.status(201).json({
       asset: {
         url: result.secure_url,
@@ -383,6 +422,9 @@ app.post("/api/v1/admin/uploads", authRequired, upload.single("image"), async (r
         height: result.height,
         format: result.format,
         bytes: result.bytes,
+        originalBytes: compressed.originalBytes,
+        compressedBytes: compressed.compressedBytes,
+        originalFormat: compressed.originalFormat,
       },
     });
   } catch (error) {

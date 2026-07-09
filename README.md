@@ -63,7 +63,11 @@ Cloudinary. Add these variables to the Railway backend service:
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
+UPLOAD_MAX_WIDTH=1800
+UPLOAD_MAX_HEIGHT=2200
+UPLOAD_WEBP_QUALITY=82
 ```
 
 Uploads are available from the admin product editor. Manual image URLs still
-work as a fallback.
+work as a fallback. Uploaded files are auto-rotated, resized to fit within
+`1800x2200`, compressed to WebP, and then sent to Cloudinary.

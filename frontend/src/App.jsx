@@ -601,14 +601,14 @@ function ServiceStrip() {
   );
 }
 
-function SiteFooter({ navigate, categories }) {
+function SiteFooter({ navigate }) {
   return (
     <footer className="site-footer">
-      <div className="footer-brand"><p className="wordmark">Moghene</p><span>Heritage textiles. Modern presence.</span></div>
-      <div className="footer-links"><h3>Shop</h3><button onClick={() => navigate("shop")}>All pieces</button>{categories.slice(0, 4).map((item) => <button key={item} onClick={() => navigate("shop", item)}>{item}</button>)}</div>
-      <div className="footer-links"><h3>Discover</h3><button onClick={() => navigate("lookbook")}>Lookbook</button><a href={`mailto:${STORE_EMAIL}`}>Contact</a><a href="https://instagram.com" target="_blank" rel="noreferrer"><Instagram size={14} /> Instagram</a></div>
-      <div className="footer-contact"><h3>Order assistance</h3><p>Questions about fit, delivery or a piece?</p><a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer">Chat on WhatsApp <ArrowRight size={15} /></a></div>
-      <div className="footer-bottom"><span>© {new Date().getFullYear()} Moghene. All rights reserved.</span><span>Abuja, Nigeria</span></div>
+      <div className="footer-brand"><p className="wordmark">Moghene</p><span>Ready-to-wear, fabrics, accessories and tailoring education from Abuja, Nigeria.</span></div>
+      <div className="footer-links"><h3>Shop</h3><button onClick={() => navigate("shop")}>Shop all</button><button onClick={() => navigate("shop", "Fabrics")}>Fabrics</button><button onClick={() => navigate("shop", "Headwear")}>Accessories</button></div>
+      <div className="footer-links"><h3>Studio</h3><button onClick={() => navigate("lookbook")}>Lookbook</button><a href={`mailto:${STORE_EMAIL}`}>Email us</a><a href="https://instagram.com" target="_blank" rel="noreferrer"><Instagram size={14} /> Instagram</a></div>
+      <div className="footer-contact"><h3>Order support</h3><p>Nationwide delivery across Nigeria. Complete orders and school enquiries directly on WhatsApp.</p><a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer">Chat on WhatsApp <ArrowRight size={15} /></a></div>
+      <div className="footer-bottom"><span>© {new Date().getFullYear()} Moghene. All rights reserved.</span><span>Abuja, Nigeria · Nationwide delivery</span></div>
     </footer>
   );
 }

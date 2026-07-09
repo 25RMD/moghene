@@ -57,7 +57,7 @@ h2 { font-family: var(--display); font-weight: 400; }
   background: var(--paper);
 }
 .site-header button { border: 0; background: none; cursor: pointer; }
-.wordmark { margin: 0; font-size: clamp(4.6rem, 8.7vw, 8.7rem); line-height: .88; letter-spacing: -.075em; text-transform: uppercase; }
+.wordmark { margin: 0; font-size: clamp(4.6rem, 8.7vw, 8.7rem); line-height: .88; letter-spacing: -.045em; text-transform: uppercase; }
 .site-header > .wordmark { justify-self: start; }
 .site-header-home > .wordmark {
   transform: translateY(18px) scaleX(1.12);

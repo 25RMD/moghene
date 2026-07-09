@@ -26,7 +26,7 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "2348012345678";
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL || "hello@moghene.com";
 const HERO_ASSET = "/hero-moghene.webp";
 const DEFAULT_SCHOOL = {
-  eyebrow: "M-Oghene tailoring school / Abuja",
+  eyebrow: "M‑Oghene tailoring school / Abuja",
   title: "From first cut to final form.",
   description: "Small-cohort, practical training in pattern drafting, garment construction and professional finishing—guided by working makers.",
   visualCaption: "Learn the craft. Build your own language.",
@@ -244,7 +244,7 @@ function Header({ page, cartCount, navigate, onCart, onSearch }) {
           <Menu size={21} />
         </button>
         <button className="wordmark" type="button" onClick={() => go("home")}>
-          M-Oghene
+          M‑Oghene
         </button>
         <nav className="desktop-nav" aria-label="Primary navigation">
           <button className={page === "shop" ? "active" : ""} onClick={() => go("shop")} type="button">
@@ -271,7 +271,7 @@ function Header({ page, cartCount, navigate, onCart, onSearch }) {
             <button className="menu-close" type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu">
               <X />
             </button>
-            <p className="wordmark">M-Oghene</p>
+            <p className="wordmark">M‑Oghene</p>
             <nav>
               <button onClick={() => go("home")}>Home</button>
               <button onClick={() => go("shop")}>Shop</button>
@@ -495,7 +495,7 @@ function FabricAccessoriesSection({ products, addToCart, navigate }) {
 function TailoringSchoolSection({ school = DEFAULT_SCHOOL }) {
   const programs = school.programs?.length ? school.programs : DEFAULT_SCHOOL.programs;
   const message = [
-    "Hello M-Oghene Tailoring School, I am interested in registering.",
+    "Hello M‑Oghene Tailoring School, I am interested in registering.",
     "",
     `Please share enrolment details for the available programmes: ${programs.join(", ")}.`,
     `Location: ${school.location}`,
@@ -546,7 +546,7 @@ function CatalogSkeleton({ spacious = false, compact = false, count = 6 }) {
 
 function LookbookPage({ products, lookbook, navigate }) {
   if (!lookbook?.heroProduct) {
-    return <div className="lookbook-unavailable"><span className="eyebrow">M-Oghene editorial</span><h1>The next story is taking shape.</h1><button className="button button-paper" onClick={() => navigate("shop")}>Shop the collection <ArrowRight size={16} /></button></div>;
+    return <div className="lookbook-unavailable"><span className="eyebrow">M‑Oghene editorial</span><h1>The next story is taking shape.</h1><button className="button button-paper" onClick={() => navigate("shop")}>Shop the collection <ArrowRight size={16} /></button></div>;
   }
   const looks = lookbook.finaleProducts?.length ? lookbook.finaleProducts : products.filter((product) => product.productType === "garment");
   const chapters = lookbook.chapters || [];
@@ -604,11 +604,11 @@ function ServiceStrip() {
 function SiteFooter({ navigate }) {
   return (
     <footer className="site-footer">
-      <div className="footer-brand"><p className="wordmark">M-Oghene</p><span>Ready-to-wear, fabrics, accessories and tailoring education from Abuja, Nigeria.</span></div>
+      <div className="footer-brand"><p className="wordmark">M‑Oghene</p><span>Ready-to-wear, fabrics, accessories and tailoring education from Abuja, Nigeria.</span></div>
       <div className="footer-links"><h3>Shop</h3><button onClick={() => navigate("shop")}>Shop all</button><button onClick={() => navigate("shop", "Fabrics")}>Fabrics</button><button onClick={() => navigate("shop", "Headwear")}>Accessories</button></div>
       <div className="footer-links"><h3>Studio</h3><button onClick={() => navigate("lookbook")}>Lookbook</button><a href={`mailto:${STORE_EMAIL}`}>Email us</a><a href="https://instagram.com" target="_blank" rel="noreferrer"><Instagram size={14} /> Instagram</a></div>
       <div className="footer-contact"><h3>Order support</h3><p>Nationwide delivery across Nigeria. Complete orders and school enquiries directly on WhatsApp.</p><a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer">Chat on WhatsApp <ArrowRight size={15} /></a></div>
-      <div className="footer-bottom"><span>© {new Date().getFullYear()} M-Oghene. All rights reserved.</span><span>Abuja, Nigeria · Nationwide delivery</span></div>
+      <div className="footer-bottom"><span>© {new Date().getFullYear()} M‑Oghene. All rights reserved.</span><span>Abuja, Nigeria · Nationwide delivery</span></div>
     </footer>
   );
 }
@@ -621,7 +621,7 @@ function CartDrawer({ cart, open, onClose, changeQuantity, removeItem, clearCart
     return `${index + 1}. ${item.name} — ${detail} — ${currency(item.price * item.quantity)}`;
   });
   const message = [
-    "Hello M-Oghene, I would like to place an order.", "", ...lines, "", `Total: ${currency(total)}`, "",
+    "Hello M‑Oghene, I would like to place an order.", "", ...lines, "", `Total: ${currency(total)}`, "",
     `Name: ${customer.name || "Not provided"}`, `Phone: ${customer.phone || "Not provided"}`,
     `Delivery address: ${customer.address || "Not provided"}`, `Notes: ${customer.notes || "None"}`,
   ].join("\n");
@@ -666,7 +666,7 @@ function SearchOverlay({ open, products, onClose, addToCart }) {
     <AnimatePresence>
       {open ? (
         <motion.div className="search-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <header><p className="wordmark">M-Oghene</p><button type="button" onClick={onClose} aria-label="Close search"><X /></button></header>
+          <header><p className="wordmark">M‑Oghene</p><button type="button" onClick={onClose} aria-label="Close search"><X /></button></header>
           <div className="search-inner">
             <span className="eyebrow">Search the collection</span>
             <label><Search /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="What are you looking for?" /></label>

@@ -54,6 +54,30 @@ Frontend and admin builds should use:
 VITE_API_URL=https://moghene-backend-production.up.railway.app/api/v1
 ```
 
+## Neon database
+
+For production, add the Neon connection variables to the Railway backend
+service. Prefer `DATABASE_URL` if Neon gives you one:
+
+```bash
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
+```
+
+The backend also supports separate Neon variables:
+
+```bash
+PGHOST=your-neon-host
+PGDATABASE=neondb
+PGUSER=neondb_owner
+PGPASSWORD=your-neon-password
+PGSSLMODE=require
+PGCHANNELBINDING=require
+```
+
+When these variables are present, products, categories, lookbook, and school
+content are stored in Neon. Without them, local development falls back to the
+JSON files in `backend/data/`.
+
 ## Cloudinary uploads
 
 The admin item editor can upload product images through the backend to

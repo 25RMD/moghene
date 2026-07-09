@@ -8,6 +8,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { v2 as cloudinary } from "cloudinary";
+import pg from "pg";
 import sharp from "sharp";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,6 +29,12 @@ const CLOUDINARY_API_SECRET = cleanEnvValue(process.env.CLOUDINARY_API_SECRET);
 const UPLOAD_MAX_WIDTH = Number(process.env.UPLOAD_MAX_WIDTH || 1800);
 const UPLOAD_MAX_HEIGHT = Number(process.env.UPLOAD_MAX_HEIGHT || 2200);
 const UPLOAD_WEBP_QUALITY = Number(process.env.UPLOAD_WEBP_QUALITY || 82);
+const DATABASE_URL = cleanEnvValue(process.env.DATABASE_URL);
+const PGHOST = cleanEnvValue(process.env.PGHOST);
+const PGDATABASE = cleanEnvValue(process.env.PGDATABASE);
+const PGUSER = cleanEnvValue(process.env.PGUSER);
+const PGPASSWORD = cleanEnvValue(process.env.PGPASSWORD);
+const PGSSLMODE = cleanEnvValue(process.env.PGSSLMODE || "require");
 
 function cleanEnvValue(value) {
   return String(value || "")
@@ -39,6 +46,21 @@ const ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "http://localhost:
   .split(",")
   .map((item) => cleanEnvValue(item))
   .filter(Boolean);
+const DATABASE_ENABLED = Boolean(DATABASE_URL || (PGHOST && PGDATABASE && PGUSER && PGPASSWORD));
+const { Pool } = pg;
+const db = DATABASE_ENABLED
+  ? new Pool(
+      DATABASE_URL
+        ? { connectionString: DATABASE_URL, ssl: PGSSLMODE === "disable" ? false : { rejectUnauthorized: false } }
+        : {
+            host: PGHOST,
+            database: PGDATABASE,
+            user: PGUSER,
+            password: PGPASSWORD,
+            ssl: PGSSLMODE === "disable" ? false : { rejectUnauthorized: false },
+          },
+    )
+  : null;
 
 const app = express();
 const upload = multer({
@@ -163,40 +185,95 @@ function normalizeCategory(category) {
   };
 }
 
-async function readProducts() {
-  const raw = await fs.readFile(DATA_FILE, "utf8");
+async function readJsonFile(file) {
+  const raw = await fs.readFile(file, "utf8");
   return JSON.parse(raw);
+}
+
+async function writeJsonFile(file, data) {
+  await fs.writeFile(file, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+}
+
+async function initializeDatabase() {
+  if (!db) return;
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS app_data (
+      key TEXT PRIMARY KEY,
+      data JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  const seeds = [
+    ["products", DATA_FILE],
+    ["categories", CATEGORIES_FILE],
+    ["lookbook", LOOKBOOK_FILE],
+    ["school", SCHOOL_FILE],
+  ];
+
+  for (const [key, file] of seeds) {
+    const exists = await db.query("SELECT 1 FROM app_data WHERE key = $1", [key]);
+    if (exists.rowCount) continue;
+    await db.query("INSERT INTO app_data (key, data) VALUES ($1, $2::jsonb)", [key, JSON.stringify(await readJsonFile(file))]);
+  }
+}
+
+const databaseReady = initializeDatabase();
+
+async function readStore(key, file) {
+  if (db) {
+    await databaseReady;
+    const result = await db.query("SELECT data FROM app_data WHERE key = $1", [key]);
+    if (result.rows[0]) return result.rows[0].data;
+  }
+
+  return readJsonFile(file);
+}
+
+async function writeStore(key, file, data) {
+  if (db) {
+    await databaseReady;
+    await db.query(
+      "INSERT INTO app_data (key, data, updated_at) VALUES ($1, $2::jsonb, NOW()) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()",
+      [key, JSON.stringify(data)],
+    );
+    return;
+  }
+
+  await writeJsonFile(file, data);
+}
+
+async function readProducts() {
+  return readStore("products", DATA_FILE);
 }
 
 async function writeProducts(products) {
-  await fs.writeFile(DATA_FILE, `${JSON.stringify(products, null, 2)}\n`, "utf8");
+  await writeStore("products", DATA_FILE, products);
 }
 
 async function readCategories() {
-  const raw = await fs.readFile(CATEGORIES_FILE, "utf8");
-  return JSON.parse(raw);
+  return readStore("categories", CATEGORIES_FILE);
 }
 
 async function writeCategories(categories) {
-  await fs.writeFile(CATEGORIES_FILE, `${JSON.stringify(categories, null, 2)}\n`, "utf8");
+  await writeStore("categories", CATEGORIES_FILE, categories);
 }
 
 async function readLookbook() {
-  const raw = await fs.readFile(LOOKBOOK_FILE, "utf8");
-  return JSON.parse(raw);
+  return readStore("lookbook", LOOKBOOK_FILE);
 }
 
 async function writeLookbook(lookbook) {
-  await fs.writeFile(LOOKBOOK_FILE, `${JSON.stringify(lookbook, null, 2)}\n`, "utf8");
+  await writeStore("lookbook", LOOKBOOK_FILE, lookbook);
 }
 
 async function readSchool() {
-  const raw = await fs.readFile(SCHOOL_FILE, "utf8");
-  return JSON.parse(raw);
+  return readStore("school", SCHOOL_FILE);
 }
 
 async function writeSchool(school) {
-  await fs.writeFile(SCHOOL_FILE, `${JSON.stringify(school, null, 2)}\n`, "utf8");
+  await writeStore("school", SCHOOL_FILE, school);
 }
 
 function normalizeSchool(value) {
@@ -331,8 +408,13 @@ function uploadBufferToCloudinary(image, folder = "moghene/products") {
   });
 }
 
-app.get("/health", (_request, response) => {
-  response.json({ ok: true });
+app.get("/health", async (_request, response, next) => {
+  try {
+    if (db) await databaseReady;
+    response.json({ ok: true, storage: db ? "postgres" : "json" });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get("/api/v1/catalog", async (_request, response, next) => {

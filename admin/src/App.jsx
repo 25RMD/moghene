@@ -51,6 +51,17 @@ const IMAGE_VARIANTS = {
   preview2x: { width: 1680, height: 630, transform: "f_auto,q_auto,c_fill,g_auto,w_1680,h_630" },
 };
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "One size"];
+const PRODUCT_TYPE_OPTIONS = [
+  { value: "garment", label: "Garment" },
+  { value: "fabric", label: "Fabric" },
+  { value: "accessory", label: "Accessory" },
+];
+const UNIT_OPTIONS = [
+  { value: "piece", label: "Piece" },
+  { value: "yard", label: "Yard" },
+  { value: "set", label: "Set" },
+  { value: "pair", label: "Pair" },
+];
 const emptyProduct = {
   id: "",
   name: "",
@@ -484,8 +495,8 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
         <div className="editor-fields">
           {images[0] ? <div className="editor-preview"><ProductImage src={images[0]} alt="Item preview" variant="preview" /><span>Primary image</span></div> : null}
           <label><span>Name</span><input required placeholder="e.g. Adire Kaftan" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></label>
-          <div className="editor-pair"><label><span>Price</span><input required type="number" min="1" placeholder="85000" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></label><label><span>Category</span><select required value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}><option value="" disabled>Select category</option>{categories.map((item) => <option value={item.name} key={item.id}>{item.name}</option>)}</select></label></div>
-          <div className="editor-pair"><label><span>Item type</span><select value={draft.productType} onChange={(event) => { const productType = event.target.value; setDraft({ ...draft, productType, unit: productType === "fabric" ? "yard" : "piece", sizes: productType === "garment" ? Array.isArray(draft.sizes) && draft.sizes.length ? draft.sizes : ["S", "M", "L"] : [] }); }}><option value="garment">Garment</option><option value="fabric">Fabric</option><option value="accessory">Accessory</option></select></label><label><span>Sales unit</span><select value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })}><option value="piece">Piece</option><option value="yard">Yard</option><option value="set">Set</option><option value="pair">Pair</option></select></label></div>
+          <div className="editor-pair"><label><span>Price</span><input required type="number" min="1" placeholder="85000" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></label><SingleSelect label="Category" value={draft.category} placeholder="Select category" options={categories.map((item) => ({ value: item.name, label: item.name }))} required onChange={(category) => setDraft({ ...draft, category })} /></div>
+          <div className="editor-pair"><SingleSelect label="Item type" value={draft.productType} options={PRODUCT_TYPE_OPTIONS} onChange={(productType) => setDraft({ ...draft, productType, unit: productType === "fabric" ? "yard" : "piece", sizes: productType === "garment" ? Array.isArray(draft.sizes) && draft.sizes.length ? draft.sizes : ["S", "M", "L"] : [] })} /><SingleSelect label="Sales unit" value={draft.unit} options={UNIT_OPTIONS} onChange={(unit) => setDraft({ ...draft, unit })} /></div>
           <div className="editor-pair">{draft.productType === "garment" ? <SizePicker selectedSizes={Array.isArray(draft.sizes) ? draft.sizes : []} onToggle={toggleSize} /> : <label><span>Order quantity</span><input disabled value={`Sold per ${draft.unit}`} /></label>}<label><span>Color</span><input required placeholder="Indigo" value={draft.color} onChange={(event) => setDraft({ ...draft, color: event.target.value })} /></label></div>
           <div className="image-upload-field">
             <input className="image-required-input" required value={images[0] || ""} onChange={() => {}} tabIndex={-1} aria-hidden="true" />
@@ -525,6 +536,27 @@ function SizePicker({ selectedSizes, onToggle }) {
         </div>
       </details>
       <input className="size-required-input" required value={selectedSizes.join(",")} onChange={() => {}} tabIndex={-1} aria-hidden="true" />
+    </div>
+  );
+}
+
+function SingleSelect({ label, value, options, placeholder = "Select option", required = false, onChange }) {
+  const selected = options.find((option) => option.value === value);
+  return (
+    <div className="size-picker single-select">
+      <span>{label}</span>
+      <details>
+        <summary>{selected?.label || placeholder}</summary>
+        <div className="size-options">
+          {options.map((option) => (
+            <label key={option.value}>
+              <input type="radio" checked={value === option.value} onChange={() => onChange(option.value)} />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </details>
+      {required ? <input className="size-required-input" required value={value || ""} onChange={() => {}} tabIndex={-1} aria-hidden="true" /> : null}
     </div>
   );
 }

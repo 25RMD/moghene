@@ -26,11 +26,11 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "2348012345678";
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL || "hello@moghene.com";
 const HERO_IMAGE = 'image-set(url("/hero-moghene-optimized.avif") type("image/avif"), url("/hero-moghene-optimized.webp") type("image/webp"))';
 const LOOKBOOK_TEASER_IMAGES = [
-  { id: "lookbook-ada-iro-buba", image: "https://www.buydfl.com/cdn/shop/products/Screenshot_20210403-090314.png?v=1617437069", name: "Ada Iro and Buba" },
-  { id: "lookbook-nara-adire-dress", image: "https://cdn.shopify.com/s/files/1/1961/0395/files/IMG_8308.jpg?v=1686039063", name: "Nara Adire Dress" },
-  { id: "lookbook-ayo-wrapper-set", image: "https://cdn.shopify.com/s/files/1/1961/0395/files/IMG_9915_2.jpg?v=1688466157", name: "Ayo Wrapper Set" },
+  { id: "lookbook-ada-iro-buba", image: "/lookbook-ada-iro-buba.webp", avif: "/lookbook-ada-iro-buba.avif", name: "Ada Iro and Buba" },
+  { id: "lookbook-nara-adire-dress", image: "/lookbook-nara-adire-dress.webp", avif: "/lookbook-nara-adire-dress.avif", name: "Nara Adire Dress" },
+  { id: "lookbook-ayo-wrapper-set", image: "/lookbook-ayo-wrapper-set.webp", avif: "/lookbook-ayo-wrapper-set.avif", name: "Ayo Wrapper Set" },
 ];
-const LOOKBOOK_FALLBACK_IMAGE = LOOKBOOK_TEASER_IMAGES[1].image;
+const LOOKBOOK_FALLBACK_IMAGE = 'image-set(url("/lookbook-hero-fallback.avif") type("image/avif"), url("/lookbook-hero-fallback.webp") type("image/webp"))';
 const DEFAULT_SCHOOL = {
   eyebrow: "M‑Oghene tailoring school / Abuja",
   title: "From first cut to final form.",
@@ -328,15 +328,14 @@ function HomePage({ products, categories, school, loading, error, addToCart, nav
       <section className="lookbook-teaser section-pad">
         <div className="lookbook-collage" aria-hidden="true">
           {lookbookImages.map((product, index) => (
-            <motion.img
+            <motion.picture
               key={product.id}
-              src={product.image}
-              alt=""
               className={`collage-image collage-${index + 1}`}
-              loading="lazy"
-              decoding="async"
               whileHover={{ y: -12, rotate: 0 }}
-            />
+            >
+              {product.avif ? <source srcSet={product.avif} type="image/avif" /> : null}
+              <img src={product.image} alt="" loading="lazy" decoding="async" />
+            </motion.picture>
           ))}
         </div>
         <div className="teaser-copy">
@@ -556,7 +555,7 @@ function CatalogSkeleton({ spacious = false, compact = false, count = 6 }) {
 
 function LookbookPage({ products, lookbook, navigate }) {
   if (!lookbook?.heroProduct) {
-    return <div className="lookbook-unavailable" style={{ "--lookbook-image": `url("${LOOKBOOK_FALLBACK_IMAGE}")` }}><span className="eyebrow">M‑Oghene editorial</span><h1>The next story is taking shape.</h1><button className="button button-paper" onClick={() => navigate("shop")}>Shop the collection <ArrowRight size={16} /></button></div>;
+    return <div className="lookbook-unavailable" style={{ "--lookbook-image": LOOKBOOK_FALLBACK_IMAGE }}><span className="eyebrow">M‑Oghene editorial</span><h1>The next story is taking shape.</h1><button className="button button-paper" onClick={() => navigate("shop")}>Shop the collection <ArrowRight size={16} /></button></div>;
   }
   const looks = lookbook.finaleProducts?.length ? lookbook.finaleProducts : products.filter((product) => product.productType === "garment");
   const chapters = lookbook.chapters || [];

@@ -244,8 +244,8 @@ h1, h2 { font-family: var(--display); font-weight: 400; }
   .admin-topbar { min-height: 64px; }
   .topbar-summary { display: none; }
   .workspace-page { padding: 38px 16px 65px; }
-  .workspace-heading { display: grid; }
-  .workspace-heading h1 { font-size: 4.3rem; }
+  .workspace-heading { display: grid; min-width: 0; }
+  .workspace-heading h1 { max-width: 100%; overflow-wrap: anywhere; font-size: clamp(3.15rem, 17vw, 4.3rem); line-height: .9; letter-spacing: 0; }
   .workspace-primary { width: 100%; }
   .workspace-toolbar { grid-template-columns: 1fr; }
   .workspace-toolbar > span { text-align: left; }

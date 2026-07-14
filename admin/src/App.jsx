@@ -192,7 +192,7 @@ export function App() {
 }
 
 function LoadingScreen() {
-  return <div className="loading-screen"><p className="admin-wordmark">M-oghene</p><span>Opening private inventory</span><i /></div>;
+  return <div className="loading-screen"><img className="admin-wordmark" src="/logo.png" alt="M-Oghene" /><span>Opening private inventory</span><i /></div>;
 }
 
 function LoginScreen({ form, setForm, error, pending, onSubmit }) {
@@ -200,7 +200,7 @@ function LoginScreen({ form, setForm, error, pending, onSubmit }) {
   return (
     <main className="login-layout">
       <section className="login-visual" style={{ "--login-image": LOGIN_IMAGE }}>
-        <div className="login-visual-copy"><p className="admin-wordmark">Moghene</p><span>Private inventory</span></div>
+        <div className="login-visual-copy"><img className="admin-wordmark" src="/logo.png" alt="M-Oghene" /><span>Private inventory</span></div>
       </section>
       <motion.section className="login-form-panel" variants={reveal} initial="hidden" animate="visible">
         <div className="login-form-inner">
@@ -327,7 +327,7 @@ function AdminDashboard({ products, categories, lookbook, school, dataStatus, da
     <main className="admin-dashboard">
       <button className="sidebar-scrim" type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} data-open={sidebarOpen} />
       <aside className="admin-sidebar" data-open={sidebarOpen}>
-        <div className="sidebar-brand"><p className="admin-wordmark">Moghene</p><span>Private inventory</span></div>
+        <div className="sidebar-brand"><img className="admin-wordmark" src="/logo.png" alt="M-Oghene" /><span>Private inventory</span></div>
         <nav className="sidebar-nav" aria-label="Admin navigation">
           <button className={section === "items" ? "active" : ""} onClick={() => selectSection("items")}><Package size={18} /><span>Items</span><strong>{products.length}</strong></button>
           <button className={section === "categories" ? "active" : ""} onClick={() => selectSection("categories")}><Tags size={18} /><span>Categories</span><strong>{categories.length}</strong></button>

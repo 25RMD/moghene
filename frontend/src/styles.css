@@ -32,7 +32,9 @@ img { display: block; max-width: 100%; }
 ::selection { background: var(--indigo); color: white; }
 .site-shell { min-height: 100vh; overflow: clip; }
 
-.wordmark { font-family: var(--wordmark); font-weight: 400; }
+.wordmark { margin: 0; font-family: var(--wordmark); font-weight: 400; }
+.logo-wordmark { display: inline-flex; align-items: center; width: clamp(74px, 7vw, 118px); }
+.logo-wordmark img { display: block; width: 100%; height: auto; }
 h1,
 h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0; }
 
@@ -57,7 +59,7 @@ h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0; }
   background: var(--paper);
 }
 .site-header button { border: 0; background: none; cursor: pointer; }
-.wordmark { margin: 0; font-size: clamp(4.6rem, 8.7vw, 8.7rem); line-height: .88; letter-spacing: -.045em; text-transform: uppercase; }
+.header-wordmark { font-size: clamp(4.6rem, 8.7vw, 8.7rem); line-height: .88; letter-spacing: -.045em; text-transform: uppercase; }
 .site-header > .wordmark { justify-self: start; }
 .site-header-home > .wordmark {
   transform: translateY(18px) scaleX(1.12);
@@ -326,7 +328,7 @@ h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0; }
 
 .search-overlay { position: fixed; z-index: 110; inset: 0; overflow-y: auto; background: var(--paper); }
 .search-overlay header { display: flex; height: clamp(116px, 10vw, 148px); align-items: center; justify-content: space-between; overflow: hidden; padding: 0 3.2vw; border-bottom: 1px solid var(--line); }
-.search-overlay header .wordmark { transform: translateY(4px) scaleX(1.06); transform-origin: left center; }
+.search-overlay header .logo-wordmark { width: 88px; transform: translateY(4px); transform-origin: left center; }
 .search-overlay header button { border-color: var(--line); color: var(--ink); }
 .search-inner { width: min(1100px, calc(100% - 40px)); margin: 0 auto; padding: clamp(54px, 6vw, 86px) 0 100px; }
 .search-inner > label { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 18px; margin-top: 24px; border-bottom: 1px solid var(--ink); }
@@ -432,7 +434,7 @@ h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0; }
   .cart-item > img { width: 90px; height: 116px; }
   .customer-fields { grid-template-columns: 1fr; }
   .search-overlay header { height: 68px; padding: 0 18px; }
-  .search-overlay header .wordmark { font-size: 1.55rem; line-height: 1; transform: none; }
+  .search-overlay header .logo-wordmark { width: 72px; transform: none; }
   .search-inner { padding-top: 50px; }
   .search-results { grid-template-columns: repeat(2,1fr); }
   .search-inner > label input { font-size: 2rem; }

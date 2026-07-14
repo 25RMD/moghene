@@ -30,9 +30,9 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 a { text-decoration: none; }
 img { display: block; max-width: 100%; }
 ::selection { background: var(--brass); color: var(--ink); }
-.admin-wordmark { font-family: var(--wordmark); font-weight: 400; }
+.admin-wordmark { display: block; width: clamp(74px, 7vw, 120px); height: auto; }
 h1, h2 { font-family: var(--display); font-weight: 400; }
-.admin-wordmark { margin: 0; font-size: clamp(2rem, 2.7vw, 2.8rem); line-height: 1; letter-spacing: -.055em; text-transform: uppercase; }
+.admin-wordmark { margin: 0; }
 .admin-eyebrow { color: var(--brass); font-size: .59rem; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
 .admin-error { margin: 0; color: #d97c80; font-size: .72rem; line-height: 1.5; }
 
@@ -47,7 +47,7 @@ h1, h2 { font-family: var(--display); font-weight: 400; }
 .login-visual { position: relative; min-height: 680px; background: #111 var(--login-image) center 30%/cover no-repeat; }
 .login-visual::after { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,.72), transparent 60%), linear-gradient(90deg, rgba(0,0,0,.2), transparent); content: ""; }
 .login-visual-copy { position: absolute; z-index: 2; right: 4vw; bottom: 7vh; left: 4vw; }
-.login-visual-copy .admin-wordmark { font-size: clamp(4.4rem, 8vw, 9rem); line-height: .9; }
+.login-visual-copy .admin-wordmark { width: clamp(130px, 17vw, 260px); }
 .login-visual-copy span { display: block; margin-top: 28px; color: var(--brass); font-size: .75rem; letter-spacing: .3em; text-transform: uppercase; }
 .login-form-panel { display: grid; place-items: center; padding: 70px 7vw; background: var(--paper); color: var(--ink); }
 .login-form-inner { width: min(100%, 520px); }
@@ -239,7 +239,7 @@ h1, h2 { font-family: var(--display); font-weight: 400; }
 @media (max-width: 680px) {
   .login-layout { grid-template-columns: 1fr; }
   .login-visual { min-height: 330px; }
-  .login-visual-copy .admin-wordmark { font-size: 4rem; }
+  .login-visual-copy .admin-wordmark { width: 132px; }
   .login-form-panel { padding: 70px 22px; }
   .admin-topbar { min-height: 64px; }
   .topbar-summary { display: none; }

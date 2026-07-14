@@ -25,6 +25,11 @@ import { currency } from "./format.js";
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "2348012345678";
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL || "hello@moghene.com";
 const HERO_IMAGE = 'image-set(url("/hero-moghene-optimized.avif") type("image/avif"), url("/hero-moghene-optimized.webp") type("image/webp"))';
+const SOCIAL_LINKS = [
+  { label: "Facebook", href: "https://www.facebook.com/share/18dFoVoKmT/" },
+  { label: "Instagram", href: "https://www.instagram.com/m.oghenegorgeouse.v.e" },
+  { label: "TikTok", href: "https://www.tiktok.com/@fashionbym_oghene" },
+];
 const LOOKBOOK_TEASER_IMAGES = [
   { id: "lookbook-ada-iro-buba", image: "/lookbook-ada-iro-buba.webp", avif: "/lookbook-ada-iro-buba.avif", name: "Ada Iro and Buba" },
   { id: "lookbook-nara-adire-dress", image: "/lookbook-nara-adire-dress.webp", avif: "/lookbook-nara-adire-dress.avif", name: "Nara Adire Dress" },
@@ -249,7 +254,7 @@ function Header({ page, cartCount, navigate, onCart, onSearch }) {
         <button className="mobile-menu-button" type="button" onClick={() => setMenuOpen(true)} aria-label="Open menu">
           <Menu size={21} />
         </button>
-        <button className="wordmark" type="button" onClick={() => go("home")}>
+        <button className="wordmark header-wordmark" type="button" onClick={() => go("home")}>
           M‑Oghene
         </button>
         <nav className="desktop-nav" aria-label="Primary navigation">
@@ -277,7 +282,7 @@ function Header({ page, cartCount, navigate, onCart, onSearch }) {
             <button className="menu-close" type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu">
               <X />
             </button>
-            <p className="wordmark">M‑Oghene</p>
+            <div className="wordmark logo-wordmark" aria-label="M-Oghene"><img src="/logo.png" alt="" /></div>
             <nav>
               <button onClick={() => go("home")}>Home</button>
               <button onClick={() => go("shop")}>Shop</button>
@@ -613,9 +618,9 @@ function ServiceStrip() {
 function SiteFooter({ navigate }) {
   return (
     <footer className="site-footer">
-      <div className="footer-brand"><p className="wordmark">M‑Oghene</p><span>Ready-to-wear, fabrics, accessories and tailoring education from Abuja, Nigeria.</span></div>
+      <div className="footer-brand"><div className="wordmark logo-wordmark" aria-label="M-Oghene"><img src="/logo.png" alt="" /></div><span>Ready-to-wear, fabrics, accessories and tailoring education from Abuja, Nigeria.</span></div>
       <div className="footer-links"><h3>Shop</h3><button onClick={() => navigate("shop")}>Shop all</button><button onClick={() => navigate("shop", "Fabrics")}>Fabrics</button><button onClick={() => navigate("shop", "Headwear")}>Accessories</button></div>
-      <div className="footer-links"><h3>Studio</h3><button onClick={() => navigate("lookbook")}>Lookbook</button><a href={`mailto:${STORE_EMAIL}`}>Email us</a><a href="https://instagram.com" target="_blank" rel="noreferrer"><Instagram size={14} /> Instagram</a></div>
+      <div className="footer-links"><h3>Studio</h3><button onClick={() => navigate("lookbook")}>Lookbook</button><a href={`mailto:${STORE_EMAIL}`}>Email us</a>{SOCIAL_LINKS.map((link) => <a href={link.href} target="_blank" rel="noreferrer" key={link.label}>{link.label === "Instagram" ? <Instagram size={14} /> : null} {link.label}</a>)}</div>
       <div className="footer-contact"><h3>Order support</h3><p>Nationwide delivery across Nigeria. Complete orders and school enquiries directly on WhatsApp.</p><a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer">Chat on WhatsApp <ArrowRight size={15} /></a></div>
       <div className="footer-bottom"><span>© {new Date().getFullYear()} M‑Oghene. All rights reserved.</span><span>Abuja, Nigeria · Nationwide delivery</span></div>
     </footer>
@@ -675,7 +680,7 @@ function SearchOverlay({ open, products, onClose, addToCart }) {
     <AnimatePresence>
       {open ? (
         <motion.div className="search-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <header><p className="wordmark">M‑Oghene</p><button type="button" onClick={onClose} aria-label="Close search"><X /></button></header>
+          <header><div className="wordmark logo-wordmark" aria-label="M-Oghene"><img src="/logo.png" alt="" /></div><button type="button" onClick={onClose} aria-label="Close search"><X /></button></header>
           <div className="search-inner">
             <span className="eyebrow">Search the collection</span>
             <label><Search /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="What are you looking for?" /></label>

@@ -13,6 +13,8 @@ import {
   Package,
   Plus,
   GraduationCap,
+  ImageUp,
+  LoaderCircle,
   Search,
   Tags,
   Trash2,
@@ -422,6 +424,7 @@ function ItemRow({ product, busy, onEdit, onToggle, onDelete }) {
 function ProductEditor({ draft, setDraft, categories, editingId, submitting, notice, onSubmit, onClose }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState("");
 
   async function handleImageUpload(event) {
     const file = event.target.files?.[0];
@@ -430,10 +433,12 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
     try {
       setUploading(true);
       setUploadError("");
+      setUploadSuccess("");
       const payload = await uploadImage(file);
       const url = payload.asset?.secureUrl || payload.asset?.url;
       if (!url) throw new Error("Cloudinary did not return an image URL.");
       setDraft((current) => ({ ...current, image: url }));
+      setUploadSuccess("Image uploaded successfully.");
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "Unable to upload this image.");
     } finally {
@@ -464,12 +469,14 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
           <div className="editor-pair"><label><span>Item type</span><select value={draft.productType} onChange={(event) => { const productType = event.target.value; setDraft({ ...draft, productType, unit: productType === "fabric" ? "yard" : "piece", sizes: productType === "garment" ? Array.isArray(draft.sizes) && draft.sizes.length ? draft.sizes : ["S", "M", "L"] : [] }); }}><option value="garment">Garment</option><option value="fabric">Fabric</option><option value="accessory">Accessory</option></select></label><label><span>Sales unit</span><select value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })}><option value="piece">Piece</option><option value="yard">Yard</option><option value="set">Set</option><option value="pair">Pair</option></select></label></div>
           <div className="editor-pair">{draft.productType === "garment" ? <SizePicker selectedSizes={Array.isArray(draft.sizes) ? draft.sizes : []} onToggle={toggleSize} /> : <label><span>Order quantity</span><input disabled value={`Sold per ${draft.unit}`} /></label>}<label><span>Color</span><input required placeholder="Indigo" value={draft.color} onChange={(event) => setDraft({ ...draft, color: event.target.value })} /></label></div>
           <div className="image-upload-field">
-            <label><span>Image URL or site asset</span><input required type="text" placeholder="https://… or /image.png" value={draft.image} onChange={(event) => setDraft({ ...draft, image: event.target.value })} /></label>
-            <label className="upload-dropzone">
+            <input className="image-required-input" required value={draft.image} onChange={() => {}} tabIndex={-1} aria-hidden="true" />
+            <label className={`upload-dropzone ${uploading ? "uploading" : ""} ${draft.image ? "has-image" : ""}`}>
               <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
-              <span>{uploading ? "Uploading to Cloudinary…" : "Upload image to Cloudinary"}</span>
+              <span className="upload-title">{uploading ? <LoaderCircle size={17} /> : <ImageUp size={17} />}{uploading ? "Uploading image…" : draft.image ? "Replace image" : "Upload image"}</span>
               <small>JPG, PNG or WebP up to 8MB. Images are compressed to WebP before Cloudinary stores them.</small>
+              {uploading ? <i className="upload-progress" aria-hidden="true" /> : null}
             </label>
+            {uploadSuccess ? <p className="admin-success"><Check size={14} /> {uploadSuccess}</p> : null}
             {uploadError ? <p className="admin-error">{uploadError}</p> : null}
           </div>
           <label><span>Description</span><textarea required placeholder="Describe the cut, textile and finish." value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>

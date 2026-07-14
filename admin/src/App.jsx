@@ -192,7 +192,7 @@ export function App() {
 }
 
 function LoadingScreen() {
-  return <div className="loading-screen"><p className="admin-wordmark">Moghene</p><span>Opening private inventory</span><i /></div>;
+  return <div className="loading-screen"><p className="admin-wordmark">M-oghene</p><span>Opening private inventory</span><i /></div>;
 }
 
 function LoginScreen({ form, setForm, error, pending, onSubmit }) {

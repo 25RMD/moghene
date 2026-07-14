@@ -59,6 +59,16 @@ function getProductImages(product) {
   return [...new Set([product.image, ...images].filter(Boolean))];
 }
 
+function getLookbookProducts(lookbook) {
+  if (!lookbook) return [];
+  const products = [
+    lookbook.heroProduct,
+    ...(lookbook.chapters || []).map((chapter) => chapter.product),
+    ...(lookbook.finaleProducts || []),
+  ].filter(Boolean);
+  return [...new Map(products.map((product) => [product.id, product])).values()];
+}
+
 function getPage() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   if (path === "/shop") return "shop";
@@ -309,8 +319,9 @@ function Header({ page, cartCount, navigate, onCart, onSearch }) {
   );
 }
 
-function HomePage({ products, categories, school, loading, error, addToCart, navigate, onViewImages }) {
-  const lookbookImages = products.length ? products.slice(0, 3) : LOOKBOOK_TEASER_IMAGES;
+function HomePage({ products, categories, lookbook, school, loading, error, addToCart, navigate, onViewImages }) {
+  const curatedLookbookImages = getLookbookProducts(lookbook).slice(0, 3);
+  const lookbookImages = curatedLookbookImages.length ? curatedLookbookImages : LOOKBOOK_TEASER_IMAGES;
 
   return (
     <>
@@ -574,11 +585,11 @@ function CatalogSkeleton({ spacious = false, compact = false, count = 6 }) {
   );
 }
 
-function LookbookPage({ products, lookbook, navigate }) {
+function LookbookPage({ lookbook, navigate }) {
   if (!lookbook?.heroProduct) {
     return <div className="lookbook-unavailable" style={{ "--lookbook-image": LOOKBOOK_FALLBACK_IMAGE }}><span className="eyebrow">M‑Oghene editorial</span><h1>The next story is taking shape.</h1><button className="button button-paper" onClick={() => navigate("shop")}>Shop the collection <ArrowRight size={16} /></button></div>;
   }
-  const looks = lookbook.finaleProducts?.length ? lookbook.finaleProducts : products.filter((product) => product.productType === "garment");
+  const looks = lookbook.finaleProducts?.length ? lookbook.finaleProducts : getLookbookProducts(lookbook);
   const chapters = lookbook.chapters || [];
   return (
     <div className="lookbook-page">

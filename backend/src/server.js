@@ -17,6 +17,7 @@ const DATA_FILE = path.resolve(__dirname, "../data/products.json");
 const CATEGORIES_FILE = path.resolve(__dirname, "../data/categories.json");
 const LOOKBOOK_FILE = path.resolve(__dirname, "../data/lookbook.json");
 const SCHOOL_FILE = path.resolve(__dirname, "../data/school.json");
+const UPLOADS_DIR = path.resolve(__dirname, "../data/uploads");
 const PORT = Number(process.env.PORT || 5000);
 const HOST = process.env.HOST || "0.0.0.0";
 const JWT_SECRET = process.env.JWT_SECRET || "moghene-dev-secret";
@@ -63,6 +64,7 @@ const db = DATABASE_ENABLED
   : null;
 
 const app = express();
+app.set("trust proxy", true);
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
@@ -221,6 +223,10 @@ async function initializeDatabase() {
 
 const databaseReady = initializeDatabase();
 
+async function ensureUploadsDir() {
+  await fs.mkdir(UPLOADS_DIR, { recursive: true });
+}
+
 async function readStore(key, file) {
   if (db) {
     await databaseReady;
@@ -242,6 +248,60 @@ async function writeStore(key, file, data) {
   }
 
   await writeJsonFile(file, data);
+}
+
+async function storeUploadedAsset(image, baseUrl) {
+  const id = randomUUID();
+  const asset = {
+    id,
+    contentType: "image/webp",
+    bytes: image.compressedBytes,
+    width: image.width,
+    height: image.height,
+    format: image.format,
+    data: image.buffer.toString("base64"),
+  };
+
+  if (db) {
+    await databaseReady;
+    await db.query(
+      "INSERT INTO app_data (key, data, updated_at) VALUES ($1, $2::jsonb, NOW()) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()",
+      [`asset:${id}`, JSON.stringify(asset)],
+    );
+  } else {
+    await ensureUploadsDir();
+    await writeJsonFile(path.join(UPLOADS_DIR, `${id}.json`), asset);
+  }
+
+  const url = `${baseUrl}/api/v1/assets/${id}`;
+
+  return {
+    url,
+    secureUrl: url,
+    publicId: id,
+    width: image.width,
+    height: image.height,
+    format: image.format,
+    bytes: image.compressedBytes,
+    originalBytes: image.originalBytes,
+    compressedBytes: image.compressedBytes,
+    originalFormat: image.originalFormat,
+    storage: db ? "postgres" : "file",
+  };
+}
+
+async function readUploadedAsset(id) {
+  if (db) {
+    await databaseReady;
+    const result = await db.query("SELECT data FROM app_data WHERE key = $1", [`asset:${id}`]);
+    return result.rows[0]?.data || null;
+  }
+
+  try {
+    return await readJsonFile(path.join(UPLOADS_DIR, `${id}.json`));
+  } catch {
+    return null;
+  }
 }
 
 async function readProducts() {
@@ -399,7 +459,8 @@ function uploadBufferToCloudinary(image, folder = "moghene/products") {
       },
       (error, result) => {
         if (error || !result) {
-          reject(error || new Error("Cloudinary upload failed."));
+          const message = error?.message || error?.error?.message || "Cloudinary upload failed.";
+          reject(new Error(message));
           return;
         }
         resolve(result);
@@ -414,6 +475,24 @@ app.get("/health", async (_request, response, next) => {
   try {
     if (db) await databaseReady;
     response.json({ ok: true, storage: db ? "postgres" : "json" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/v1/assets/:id", async (request, response, next) => {
+  try {
+    const asset = await readUploadedAsset(request.params.id);
+    if (!asset?.data || !asset?.contentType) {
+      response.status(404).json({ message: "Asset not found." });
+      return;
+    }
+
+    const buffer = Buffer.from(asset.data, "base64");
+    response.setHeader("Content-Type", asset.contentType);
+    response.setHeader("Content-Length", String(buffer.length));
+    response.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    response.send(buffer);
   } catch (error) {
     next(error);
   }
@@ -484,11 +563,6 @@ app.get("/api/v1/admin/me", authRequired, (request, response) => {
 
 app.post("/api/v1/admin/uploads", authRequired, upload.single("image"), async (request, response, next) => {
   try {
-    if (!cloudinaryReady()) {
-      response.status(503).json({ message: "Cloudinary is not configured on the backend yet." });
-      return;
-    }
-
     if (!request.file) {
       response.status(400).json({ message: "Choose an image file to upload." });
       return;
@@ -496,20 +570,36 @@ app.post("/api/v1/admin/uploads", authRequired, upload.single("image"), async (r
 
     const folder = cleanEnvValue(request.body?.folder) || "moghene/products";
     const compressed = await compressImageForUpload(request.file);
-    const result = await uploadBufferToCloudinary(compressed, folder);
+    const baseUrl = `${request.protocol}://${request.get("host")}`;
+    let asset;
+
+    if (cloudinaryReady()) {
+      try {
+        const result = await uploadBufferToCloudinary(compressed, folder);
+        asset = {
+          url: result.secure_url,
+          secureUrl: result.secure_url,
+          publicId: result.public_id,
+          width: result.width,
+          height: result.height,
+          format: result.format,
+          bytes: result.bytes,
+          originalBytes: compressed.originalBytes,
+          compressedBytes: compressed.compressedBytes,
+          originalFormat: compressed.originalFormat,
+          storage: "cloudinary",
+        };
+      } catch (error) {
+        console.error("Cloudinary upload failed; storing asset in database instead.", error);
+      }
+    }
+
+    if (!asset) {
+      asset = await storeUploadedAsset(compressed, baseUrl);
+    }
+
     response.status(201).json({
-      asset: {
-        url: result.secure_url,
-        secureUrl: result.secure_url,
-        publicId: result.public_id,
-        width: result.width,
-        height: result.height,
-        format: result.format,
-        bytes: result.bytes,
-        originalBytes: compressed.originalBytes,
-        compressedBytes: compressed.compressedBytes,
-        originalFormat: compressed.originalFormat,
-      },
+      asset,
     });
   } catch (error) {
     next(error);

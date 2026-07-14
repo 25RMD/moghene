@@ -432,7 +432,6 @@ function ShopPage({ products, categories: availableCategories, loading, error, a
           <h1>Shop all.</h1>
           <p>Premade Nigerian pieces, available for immediate ordering.</p>
         </div>
-        {products[0] ? <img src={products[0].image} alt={products[0].name} loading="eager" decoding="async" fetchpriority="high" /> : null}
       </section>
       <section className="shop-workspace">
         <div className="shop-toolbar">
@@ -481,16 +480,32 @@ function ProductGrid({ products, loading, error, addToCart, onViewImages, spacio
 function ProductCard({ product, addToCart, onViewImages, priority, compact = false }) {
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
   const [size, setSize] = useState(sizes[0] || product.unit || "piece");
-  const imageCount = getProductImages(product).length;
+  const images = getProductImages(product);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const activeImage = images[activeImageIndex] || product.image;
+  const imageCount = images.length;
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [product.id, imageCount]);
+
+  useEffect(() => {
+    if (imageCount < 2) return undefined;
+    const interval = window.setInterval(() => {
+      setActiveImageIndex((index) => (index + 1) % imageCount);
+    }, 3200);
+    return () => window.clearInterval(interval);
+  }, [imageCount]);
+
   return (
     <motion.article className={`product-card ${compact ? "product-card-compact" : ""}`} variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
-      <div className="product-image-wrap">
-        <img src={product.image} alt={product.name} loading={priority ? "eager" : "lazy"} decoding="async" fetchpriority={priority ? "high" : "auto"} />
-        <button className="image-view-button" type="button" onClick={() => onViewImages?.(product)} aria-label={`View ${product.name} images`}>
+      <button className="product-image-wrap" type="button" onClick={() => onViewImages?.(product)} aria-label={`View ${product.name} images`}>
+        <img src={activeImage} alt={product.name} loading={priority ? "eager" : "lazy"} decoding="async" fetchpriority={priority ? "high" : "auto"} />
+        <span className="image-view-button" aria-hidden="true">
           <Expand size={15} />
           <span>{imageCount > 1 ? `${imageCount} images` : "View image"}</span>
-        </button>
-      </div>
+        </span>
+      </button>
       <div className="product-title-row">
         <div><p>{product.category}</p><h3>{product.name}</h3></div>
         <strong>{currency(product.price)}</strong>

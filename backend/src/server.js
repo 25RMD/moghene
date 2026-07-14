@@ -804,13 +804,9 @@ app.delete("/api/v1/admin/categories/:id", authRequired, async (request, respons
     }
 
     const itemCount = products.filter((product) => product.category === category.name).length;
-    if (itemCount > 0) {
-      response.status(409).json({ message: `Move or delete the ${itemCount} item${itemCount === 1 ? "" : "s"} in this category first.` });
-      return;
-    }
 
     await writeCategories(categories.filter((item) => item.id !== category.id));
-    response.json({ success: true });
+    response.json({ success: true, orphanedItemCount: itemCount });
   } catch (error) {
     next(error);
   }

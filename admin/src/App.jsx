@@ -679,12 +679,15 @@ function CategoriesWorkspace({ categories, setCategories, setProducts }) {
   }
 
   async function removeCategory(category) {
-    if (!window.confirm(`Delete ${category.name}?`)) return;
+    if (!window.confirm(`Delete ${category.name}? Existing items in this category will stay in the catalog, but they will need to be edited into another category later.`)) return;
     try {
       setBusyId(category.id);
       setMessage("");
-      await deleteCategory(category.id);
+      const payload = await deleteCategory(category.id);
       setCategories((items) => items.filter((item) => item.id !== category.id));
+      if (payload.orphanedItemCount) {
+        setMessage(`${category.name} deleted. ${payload.orphanedItemCount} ${payload.orphanedItemCount === 1 ? "item still uses" : "items still use"} that category and should be edited later.`);
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to delete category.");
     } finally {
@@ -694,7 +697,7 @@ function CategoriesWorkspace({ categories, setCategories, setProducts }) {
 
   return (
     <motion.div className="workspace-page" variants={reveal} initial="hidden" animate="visible">
-      <header className="workspace-heading"><div><span className="admin-eyebrow">Catalog structure</span><h1>Categories</h1><p>Create and rename the groups customers use to browse the storefront.</p></div></header>
+      <header className="workspace-heading"><div><span className="admin-eyebrow">Catalog structure</span><h1>Categories</h1><p>Create, rename and remove browsing groups. Deleting a category leaves existing items untouched until you edit them.</p></div></header>
       <form className="category-create" onSubmit={addCategory}><label><span>New category</span><input required value={name} onChange={(event) => setName(event.target.value)} placeholder="Category name" /></label><button disabled={busyId === "new" || !name.trim()}><Plus size={17} /> Add category</button></form>
       {message ? <p className="workspace-notice admin-error">{message}</p> : null}
       <div className="category-list">

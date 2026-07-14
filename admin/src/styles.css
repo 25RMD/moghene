@@ -143,10 +143,21 @@ h1, h2 { font-family: var(--display); font-weight: 400; }
 .product-editor header button { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid rgba(21,20,18,.2); background: transparent; }
 .editor-fields { display: grid; align-content: start; gap: 18px; overflow-y: auto; padding: 26px 28px; }
 .editor-fields label { display: grid; gap: 8px; }
-.editor-fields label > span { font-size: .58rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.editor-fields label > span, .size-picker > span { font-size: .58rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 .editor-fields input, .editor-fields textarea, .editor-fields select { width: 100%; min-height: 45px; padding: 0 4px; border: 0; border-bottom: 1px solid rgba(21,20,18,.32); border-radius: 0; background: transparent; color: var(--ink); outline: 0; }
 .editor-fields textarea { min-height: 90px; padding-top: 12px; resize: vertical; }
 .editor-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.size-picker { position: relative; display: grid; gap: 8px; }
+.size-picker details { position: relative; }
+.size-picker summary { display: flex; min-height: 45px; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid rgba(21,20,18,.32); color: var(--ink); cursor: pointer; list-style: none; }
+.size-picker summary::-webkit-details-marker { display: none; }
+.size-picker summary::after { width: 7px; height: 7px; margin-right: 4px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; content: ""; transform: rotate(45deg) translateY(-2px); }
+.size-picker details[open] summary::after { transform: rotate(225deg) translateY(-1px); }
+.size-options { position: absolute; z-index: 12; top: calc(100% + 8px); left: 0; right: 0; display: grid; gap: 4px; padding: 10px; border: 1px solid rgba(21,20,18,.16); background: var(--paper); box-shadow: 0 18px 45px rgba(21,20,18,.18); }
+.size-options label { display: flex; min-height: 34px; align-items: center; gap: 9px; padding: 0 8px; }
+.size-options input { width: 16px; min-height: 16px; accent-color: var(--ink); }
+.size-options span { font-size: .7rem; font-weight: 600; letter-spacing: .04em; }
+.size-required-input { position: absolute; width: 1px !important; min-height: 1px !important; opacity: 0; pointer-events: none; }
 .editor-preview { position: relative; height: 210px; overflow: hidden; background: #d8d1c6; }
 .editor-preview img { width: 100%; height: 100%; aspect-ratio: 8 / 3; object-fit: cover; object-position: center 25%; background: #cfc7ba; }
 .editor-preview span { position: absolute; bottom: 0; left: 0; padding: 7px 10px; background: var(--ink); color: white; font-size: .52rem; text-transform: uppercase; }

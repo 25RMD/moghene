@@ -48,12 +48,13 @@ const IMAGE_VARIANTS = {
   preview: { width: 1120, height: 420, transform: "f_auto,q_auto,c_fill,g_auto,w_1120,h_420" },
   preview2x: { width: 1680, height: 630, transform: "f_auto,q_auto,c_fill,g_auto,w_1680,h_630" },
 };
+const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "One size"];
 const emptyProduct = {
   id: "",
   name: "",
   price: "",
   category: "",
-  sizes: "S, M, L",
+  sizes: ["S", "M", "L"],
   color: "",
   description: "",
   image: "",
@@ -244,7 +245,7 @@ function AdminDashboard({ products, categories, lookbook, school, dataStatus, da
 
   function openEditItem(product) {
     setEditingId(product.id);
-    setDraft({ ...product, sizes: (product.sizes || []).join(", ") });
+    setDraft({ ...product, sizes: Array.isArray(product.sizes) ? product.sizes : [] });
     setNotice("");
     setEditorOpen(true);
   }
@@ -263,7 +264,7 @@ function AdminDashboard({ products, categories, lookbook, school, dataStatus, da
       ...draft,
       id: slug || crypto.randomUUID(),
       price: Number(draft.price),
-      sizes: draft.productType === "garment" ? String(draft.sizes).split(",").map((item) => item.trim()).filter(Boolean) : [],
+      sizes: draft.productType === "garment" ? (Array.isArray(draft.sizes) ? draft.sizes : String(draft.sizes).split(",").map((item) => item.trim()).filter(Boolean)) : [],
       available: Boolean(draft.available),
     };
 
@@ -441,6 +442,16 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
     }
   }
 
+  function toggleSize(size) {
+    setDraft((current) => {
+      const sizes = Array.isArray(current.sizes) ? current.sizes : [];
+      return {
+        ...current,
+        sizes: sizes.includes(size) ? sizes.filter((item) => item !== size) : [...sizes, size],
+      };
+    });
+  }
+
   return (
     <motion.aside className="editor-layer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <button className="editor-scrim" onClick={onClose} aria-label="Close editor" />
@@ -450,8 +461,8 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
           {draft.image ? <div className="editor-preview"><ProductImage src={draft.image} alt="Item preview" variant="preview" /><span>Image preview</span></div> : null}
           <label><span>Name</span><input required placeholder="e.g. Adire Kaftan" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></label>
           <div className="editor-pair"><label><span>Price</span><input required type="number" min="1" placeholder="85000" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></label><label><span>Category</span><select required value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}><option value="" disabled>Select category</option>{categories.map((item) => <option value={item.name} key={item.id}>{item.name}</option>)}</select></label></div>
-          <div className="editor-pair"><label><span>Item type</span><select value={draft.productType} onChange={(event) => { const productType = event.target.value; setDraft({ ...draft, productType, unit: productType === "fabric" ? "yard" : "piece", sizes: productType === "garment" ? draft.sizes || "S, M, L" : "" }); }}><option value="garment">Garment</option><option value="fabric">Fabric</option><option value="accessory">Accessory</option></select></label><label><span>Sales unit</span><select value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })}><option value="piece">Piece</option><option value="yard">Yard</option><option value="set">Set</option><option value="pair">Pair</option></select></label></div>
-          <div className="editor-pair">{draft.productType === "garment" ? <label><span>Sizes</span><input required placeholder="S, M, L" value={draft.sizes} onChange={(event) => setDraft({ ...draft, sizes: event.target.value })} /></label> : <label><span>Order quantity</span><input disabled value={`Sold per ${draft.unit}`} /></label>}<label><span>Color</span><input required placeholder="Indigo" value={draft.color} onChange={(event) => setDraft({ ...draft, color: event.target.value })} /></label></div>
+          <div className="editor-pair"><label><span>Item type</span><select value={draft.productType} onChange={(event) => { const productType = event.target.value; setDraft({ ...draft, productType, unit: productType === "fabric" ? "yard" : "piece", sizes: productType === "garment" ? Array.isArray(draft.sizes) && draft.sizes.length ? draft.sizes : ["S", "M", "L"] : [] }); }}><option value="garment">Garment</option><option value="fabric">Fabric</option><option value="accessory">Accessory</option></select></label><label><span>Sales unit</span><select value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })}><option value="piece">Piece</option><option value="yard">Yard</option><option value="set">Set</option><option value="pair">Pair</option></select></label></div>
+          <div className="editor-pair">{draft.productType === "garment" ? <SizePicker selectedSizes={Array.isArray(draft.sizes) ? draft.sizes : []} onToggle={toggleSize} /> : <label><span>Order quantity</span><input disabled value={`Sold per ${draft.unit}`} /></label>}<label><span>Color</span><input required placeholder="Indigo" value={draft.color} onChange={(event) => setDraft({ ...draft, color: event.target.value })} /></label></div>
           <div className="image-upload-field">
             <label><span>Image URL or site asset</span><input required type="text" placeholder="https://… or /image.png" value={draft.image} onChange={(event) => setDraft({ ...draft, image: event.target.value })} /></label>
             <label className="upload-dropzone">
@@ -468,6 +479,26 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
         <footer><button type="button" className="editor-cancel" onClick={onClose}>Cancel</button><button className="editor-save" disabled={submitting}>{submitting ? "Saving…" : editingId ? "Save changes" : "Add item"}<Check size={16} /></button></footer>
       </motion.form>
     </motion.aside>
+  );
+}
+
+function SizePicker({ selectedSizes, onToggle }) {
+  return (
+    <div className="size-picker">
+      <span>Sizes</span>
+      <details>
+        <summary>{selectedSizes.length ? selectedSizes.join(", ") : "Select sizes"}</summary>
+        <div className="size-options">
+          {SIZE_OPTIONS.map((size) => (
+            <label key={size}>
+              <input type="checkbox" checked={selectedSizes.includes(size)} onChange={() => onToggle(size)} />
+              <span>{size}</span>
+            </label>
+          ))}
+        </div>
+      </details>
+      <input className="size-required-input" required value={selectedSizes.join(",")} onChange={() => {}} tabIndex={-1} aria-hidden="true" />
+    </div>
   );
 }
 

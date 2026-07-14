@@ -414,6 +414,23 @@ function cloudinaryReady() {
   return Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET);
 }
 
+function maskCredential(value) {
+  if (!value) return "";
+  return `${"*".repeat(Math.max(0, value.length - 4))}${value.slice(-4)}`;
+}
+
+function pingCloudinary() {
+  return new Promise((resolve, reject) => {
+    cloudinary.api.ping((error, result) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(result);
+    });
+  });
+}
+
 async function compressImageForUpload(file) {
   try {
     const input = sharp(file.buffer, { failOn: "none" }).rotate();
@@ -559,6 +576,34 @@ app.post("/api/v1/admin/logout", (_request, response) => {
 
 app.get("/api/v1/admin/me", authRequired, (request, response) => {
   response.json({ admin: { email: request.admin.email } });
+});
+
+app.get("/api/v1/admin/uploads/status", authRequired, async (_request, response) => {
+  const status = {
+    configured: cloudinaryReady(),
+    cloudName: CLOUDINARY_CLOUD_NAME || null,
+    apiKey: CLOUDINARY_API_KEY ? maskCredential(CLOUDINARY_API_KEY) : null,
+    hasApiSecret: Boolean(CLOUDINARY_API_SECRET),
+    ping: null,
+    error: null,
+  };
+
+  if (!cloudinaryReady()) {
+    response.json(status);
+    return;
+  }
+
+  try {
+    status.ping = await pingCloudinary();
+  } catch (error) {
+    status.error = {
+      message: error?.message || "Cloudinary ping failed.",
+      httpCode: error?.http_code || error?.httpCode || null,
+      name: error?.name || null,
+    };
+  }
+
+  response.json(status);
 });
 
 app.post("/api/v1/admin/uploads", authRequired, upload.single("image"), async (request, response, next) => {

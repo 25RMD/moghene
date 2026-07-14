@@ -174,6 +174,11 @@ h1, h2 { font-family: var(--display); font-weight: 400; }
 .upload-dropzone small { color: rgba(21,20,18,.58); font-size: .72rem; line-height: 1.45; }
 .upload-progress { position: relative; display: block; height: 3px; overflow: hidden; background: rgba(21,20,18,.12); }
 .upload-progress::after { position: absolute; inset: 0 auto 0 0; width: 42%; background: var(--brass); content: ""; animation: upload-progress 1s ease-in-out infinite; }
+.image-chip-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.image-chip { position: relative; min-height: 92px; overflow: hidden; background: #d8d1c6; }
+.image-chip img { width: 100%; height: 100%; aspect-ratio: 1; object-fit: cover; }
+.image-chip span { position: absolute; bottom: 0; left: 0; max-width: calc(100% - 32px); padding: 5px 7px; overflow: hidden; background: rgba(21,20,18,.86); color: white; font-size: .52rem; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.image-chip button { position: absolute; top: 6px; right: 6px; display: grid; width: 24px; height: 24px; place-items: center; border: 0; background: rgba(21,20,18,.86); color: white; }
 @keyframes upload-progress { 50% { transform: translateX(140%); } 100% { transform: translateX(260%); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 .editor-visibility { display: block !important; }

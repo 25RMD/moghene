@@ -60,6 +60,7 @@ const emptyProduct = {
   color: "",
   description: "",
   image: "",
+  images: [],
   productType: "garment",
   unit: "piece",
   available: true,
@@ -247,7 +248,7 @@ function AdminDashboard({ products, categories, lookbook, school, dataStatus, da
 
   function openEditItem(product) {
     setEditingId(product.id);
-    setDraft({ ...product, sizes: Array.isArray(product.sizes) ? product.sizes : [] });
+    setDraft({ ...product, sizes: Array.isArray(product.sizes) ? product.sizes : [], images: Array.isArray(product.images) && product.images.length ? product.images : [product.image].filter(Boolean) });
     setNotice("");
     setEditorOpen(true);
   }
@@ -266,6 +267,8 @@ function AdminDashboard({ products, categories, lookbook, school, dataStatus, da
       ...draft,
       id: slug || crypto.randomUUID(),
       price: Number(draft.price),
+      image: (Array.isArray(draft.images) && draft.images[0]) || draft.image,
+      images: Array.isArray(draft.images) ? draft.images.filter(Boolean) : [draft.image].filter(Boolean),
       sizes: draft.productType === "garment" ? (Array.isArray(draft.sizes) ? draft.sizes : String(draft.sizes).split(",").map((item) => item.trim()).filter(Boolean)) : [],
       available: Boolean(draft.available),
     };
@@ -425,20 +428,29 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
+  const images = Array.isArray(draft.images) && draft.images.length ? draft.images : [draft.image].filter(Boolean);
 
   async function handleImageUpload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
 
     try {
       setUploading(true);
       setUploadError("");
       setUploadSuccess("");
-      const payload = await uploadImage(file);
-      const url = payload.asset?.secureUrl || payload.asset?.url;
-      if (!url) throw new Error("Cloudinary did not return an image URL.");
-      setDraft((current) => ({ ...current, image: url }));
-      setUploadSuccess("Image uploaded successfully.");
+      const uploaded = [];
+      for (const file of files) {
+        const payload = await uploadImage(file);
+        const url = payload.asset?.secureUrl || payload.asset?.url;
+        if (!url) throw new Error("Cloudinary did not return an image URL.");
+        uploaded.push(url);
+      }
+      setDraft((current) => {
+        const currentImages = Array.isArray(current.images) && current.images.length ? current.images : [current.image].filter(Boolean);
+        const nextImages = [...new Set([...currentImages, ...uploaded])];
+        return { ...current, image: nextImages[0] || "", images: nextImages };
+      });
+      setUploadSuccess(`${uploaded.length} ${uploaded.length === 1 ? "image" : "images"} uploaded successfully.`);
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "Unable to upload this image.");
     } finally {
@@ -457,25 +469,33 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
     });
   }
 
+  function removeImage(image) {
+    setDraft((current) => {
+      const nextImages = (Array.isArray(current.images) && current.images.length ? current.images : [current.image].filter(Boolean)).filter((item) => item !== image);
+      return { ...current, image: nextImages[0] || "", images: nextImages };
+    });
+  }
+
   return (
     <motion.aside className="editor-layer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <button className="editor-scrim" onClick={onClose} aria-label="Close editor" />
       <motion.form className="product-editor" onSubmit={onSubmit} initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}>
         <header><div><span className="admin-eyebrow">Catalog editor</span><h2>{editingId ? "Edit item" : "Add item"}</h2></div><button type="button" onClick={onClose} aria-label="Close editor"><X /></button></header>
         <div className="editor-fields">
-          {draft.image ? <div className="editor-preview"><ProductImage src={draft.image} alt="Item preview" variant="preview" /><span>Image preview</span></div> : null}
+          {images[0] ? <div className="editor-preview"><ProductImage src={images[0]} alt="Item preview" variant="preview" /><span>Primary image</span></div> : null}
           <label><span>Name</span><input required placeholder="e.g. Adire Kaftan" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></label>
           <div className="editor-pair"><label><span>Price</span><input required type="number" min="1" placeholder="85000" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></label><label><span>Category</span><select required value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}><option value="" disabled>Select category</option>{categories.map((item) => <option value={item.name} key={item.id}>{item.name}</option>)}</select></label></div>
           <div className="editor-pair"><label><span>Item type</span><select value={draft.productType} onChange={(event) => { const productType = event.target.value; setDraft({ ...draft, productType, unit: productType === "fabric" ? "yard" : "piece", sizes: productType === "garment" ? Array.isArray(draft.sizes) && draft.sizes.length ? draft.sizes : ["S", "M", "L"] : [] }); }}><option value="garment">Garment</option><option value="fabric">Fabric</option><option value="accessory">Accessory</option></select></label><label><span>Sales unit</span><select value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })}><option value="piece">Piece</option><option value="yard">Yard</option><option value="set">Set</option><option value="pair">Pair</option></select></label></div>
           <div className="editor-pair">{draft.productType === "garment" ? <SizePicker selectedSizes={Array.isArray(draft.sizes) ? draft.sizes : []} onToggle={toggleSize} /> : <label><span>Order quantity</span><input disabled value={`Sold per ${draft.unit}`} /></label>}<label><span>Color</span><input required placeholder="Indigo" value={draft.color} onChange={(event) => setDraft({ ...draft, color: event.target.value })} /></label></div>
           <div className="image-upload-field">
-            <input className="image-required-input" required value={draft.image} onChange={() => {}} tabIndex={-1} aria-hidden="true" />
-            <label className={`upload-dropzone ${uploading ? "uploading" : ""} ${draft.image ? "has-image" : ""}`}>
-              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
-              <span className="upload-title">{uploading ? <LoaderCircle size={17} /> : <ImageUp size={17} />}{uploading ? "Uploading image…" : draft.image ? "Replace image" : "Upload image"}</span>
+            <input className="image-required-input" required value={images[0] || ""} onChange={() => {}} tabIndex={-1} aria-hidden="true" />
+            <label className={`upload-dropzone ${uploading ? "uploading" : ""} ${images.length ? "has-image" : ""}`}>
+              <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={uploading} />
+              <span className="upload-title">{uploading ? <LoaderCircle size={17} /> : <ImageUp size={17} />}{uploading ? "Uploading images…" : images.length ? "Add more images" : "Upload images"}</span>
               <small>JPG, PNG or WebP up to 8MB. Images are compressed to WebP before Cloudinary stores them.</small>
               {uploading ? <i className="upload-progress" aria-hidden="true" /> : null}
             </label>
+            {images.length > 1 ? <div className="image-chip-list" aria-label="Uploaded images">{images.map((image, index) => <div className="image-chip" key={image}><ProductImage src={image} alt={`Uploaded item ${index + 1}`} /><span>{index === 0 ? "Primary" : `Image ${index + 1}`}</span><button type="button" onClick={() => removeImage(image)} aria-label={`Remove image ${index + 1}`}><X size={13} /></button></div>)}</div> : null}
             {uploadSuccess ? <p className="admin-success"><Check size={14} /> {uploadSuccess}</p> : null}
             {uploadError ? <p className="admin-error">{uploadError}</p> : null}
           </div>

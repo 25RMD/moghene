@@ -132,6 +132,14 @@ function slugify(value) {
 
 function normalizeProduct(product) {
   const id = slugify(product.id || product.name) || randomUUID();
+  const productImages = Array.isArray(product.images)
+    ? product.images.map((item) => String(item).trim()).filter(Boolean)
+    : String(product.images || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+  const image = String(product.image || productImages[0] || "").trim();
+  const images = [...new Set([image, ...productImages].filter(Boolean))];
 
   return {
     id,
@@ -146,7 +154,8 @@ function normalizeProduct(product) {
           .filter(Boolean),
     color: String(product.color || "").trim(),
     description: String(product.description || "").trim(),
-    image: String(product.image || "").trim(),
+    image,
+    images,
     productType: ["garment", "fabric", "accessory"].includes(product.productType) ? product.productType : "garment",
     unit: String(product.unit || "piece").trim().toLowerCase(),
     available: Boolean(product.available),
@@ -168,12 +177,18 @@ function validateProduct(product) {
 
   if (!product.unit) return "A sales unit is required.";
 
-  if (!product.image.startsWith("/")) {
+  const invalidImage = product.images.find((image) => {
+    if (image.startsWith("/")) return false;
     try {
-      new URL(product.image);
+      new URL(image);
+      return false;
     } catch {
-      return "Image must be a valid URL or a site asset path.";
+      return true;
     }
+  });
+
+  if (invalidImage) {
+    return "Each image must be a valid URL or a site asset path.";
   }
 
   return "";

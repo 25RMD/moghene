@@ -7,6 +7,9 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Expand,
   Instagram,
   Menu,
   MessageCircleMore,
@@ -50,6 +53,12 @@ const reveal = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
+function getProductImages(product) {
+  if (!product) return [];
+  const images = Array.isArray(product.images) ? product.images : [];
+  return [...new Set([product.image, ...images].filter(Boolean))];
+}
+
 function getPage() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   if (path === "/shop") return "shop";
@@ -76,6 +85,7 @@ export function App() {
   const [cart, setCart] = useState(getSavedCart);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [galleryProduct, setGalleryProduct] = useState(null);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState("");
 
@@ -120,9 +130,9 @@ export function App() {
   }, [cart]);
 
   useEffect(() => {
-    document.body.classList.toggle("is-locked", cartOpen || searchOpen);
+    document.body.classList.toggle("is-locked", cartOpen || searchOpen || Boolean(galleryProduct));
     return () => document.body.classList.remove("is-locked");
-  }, [cartOpen, searchOpen]);
+  }, [cartOpen, searchOpen, galleryProduct]);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
@@ -134,7 +144,7 @@ export function App() {
       wheelMultiplier: 0.9,
       anchors: true,
       stopInertiaOnNavigate: true,
-      prevent: (node) => Boolean(node.closest?.(".cart-panel, .search-overlay, .mobile-menu")),
+      prevent: (node) => Boolean(node.closest?.(".cart-panel, .search-overlay, .mobile-menu, .image-viewer-panel")),
     });
     lenisRef.current = lenis;
 
@@ -147,9 +157,9 @@ export function App() {
   useEffect(() => {
     const lenis = lenisRef.current;
     if (!lenis) return;
-    if (cartOpen || searchOpen) lenis.stop();
+    if (cartOpen || searchOpen || galleryProduct) lenis.stop();
     else lenis.start();
-  }, [cartOpen, searchOpen]);
+  }, [cartOpen, searchOpen, galleryProduct]);
 
   function navigate(nextPage, category = "") {
     const path = nextPage === "home" ? "/" : `/${nextPage}`;
@@ -202,7 +212,7 @@ export function App() {
   }
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const shared = { products, categories, lookbook, school, loading: catalogLoading, error: catalogError, addToCart, navigate };
+  const shared = { products, categories, lookbook, school, loading: catalogLoading, error: catalogError, addToCart, navigate, onViewImages: setGalleryProduct };
 
   return (
     <main className="site-shell">
@@ -235,6 +245,7 @@ export function App() {
         onClose={() => setSearchOpen(false)}
         addToCart={addToCart}
       />
+      <ImageViewer product={galleryProduct} onClose={() => setGalleryProduct(null)} />
     </main>
   );
 }
@@ -298,7 +309,7 @@ function Header({ page, cartCount, navigate, onCart, onSearch }) {
   );
 }
 
-function HomePage({ products, categories, school, loading, error, addToCart, navigate }) {
+function HomePage({ products, categories, school, loading, error, addToCart, navigate, onViewImages }) {
   const lookbookImages = products.length ? products.slice(0, 3) : LOOKBOOK_TEASER_IMAGES;
 
   return (
@@ -322,13 +333,13 @@ function HomePage({ products, categories, school, loading, error, addToCart, nav
           <h2>Shop the latest</h2>
           <button className="text-link" type="button" onClick={() => navigate("shop")}>View all</button>
         </header>
-        <ProductGrid products={products.filter((product) => product.productType === "garment").slice(0, 4)} loading={loading} error={error} addToCart={addToCart} compact />
+        <ProductGrid products={products.filter((product) => product.productType === "garment").slice(0, 4)} loading={loading} error={error} addToCart={addToCart} onViewImages={onViewImages} compact />
         <button className="text-link section-link" type="button" onClick={() => navigate("shop")}>View all pieces <ArrowRight size={16} /></button>
       </section>
 
       <ServiceStrip />
 
-      <FabricAccessoriesSection products={products} addToCart={addToCart} navigate={navigate} />
+      <FabricAccessoriesSection products={products} addToCart={addToCart} navigate={navigate} onViewImages={onViewImages} />
 
       <section className="lookbook-teaser section-pad">
         <div className="lookbook-collage" aria-hidden="true">
@@ -384,7 +395,7 @@ function CollectionRail({ navigate, categories }) {
   );
 }
 
-function ShopPage({ products, categories: availableCategories, loading, error, addToCart }) {
+function ShopPage({ products, categories: availableCategories, loading, error, addToCart, onViewImages }) {
   const initialCategory = new URLSearchParams(window.location.search).get("category") || "All";
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
@@ -435,14 +446,14 @@ function ShopPage({ products, categories: availableCategories, loading, error, a
           ))}
         </div>
         <p className="result-count">{sorted.length} {sorted.length === 1 ? "piece" : "pieces"}</p>
-        <ProductGrid products={sorted} loading={loading} error={error} addToCart={addToCart} spacious />
+        <ProductGrid products={sorted} loading={loading} error={error} addToCart={addToCart} onViewImages={onViewImages} spacious />
       </section>
       <ServiceStrip />
     </div>
   );
 }
 
-function ProductGrid({ products, loading, error, addToCart, spacious = false, compact = false }) {
+function ProductGrid({ products, loading, error, addToCart, onViewImages, spacious = false, compact = false }) {
   if (loading) return <CatalogSkeleton spacious={spacious} compact={compact} count={compact ? 4 : 6} />;
   if (error) return <div className="catalog-message error"><span>Catalog unavailable</span><p>{error}</p></div>;
   if (!products.length) return <div className="catalog-message"><span>No pieces found</span><p>Try another collection or search term.</p></div>;
@@ -450,19 +461,24 @@ function ProductGrid({ products, loading, error, addToCart, spacious = false, co
   return (
     <div className={`product-grid ${spacious ? "product-grid-spacious" : ""} ${compact ? "product-grid-compact" : ""}`}>
       {products.map((product, index) => (
-        <ProductCard product={product} addToCart={addToCart} key={product.id} priority={index < 3} compact={compact} />
+        <ProductCard product={product} addToCart={addToCart} onViewImages={onViewImages} key={product.id} priority={index < 3} compact={compact} />
       ))}
     </div>
   );
 }
 
-function ProductCard({ product, addToCart, priority, compact = false }) {
+function ProductCard({ product, addToCart, onViewImages, priority, compact = false }) {
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
   const [size, setSize] = useState(sizes[0] || product.unit || "piece");
+  const imageCount = getProductImages(product).length;
   return (
     <motion.article className={`product-card ${compact ? "product-card-compact" : ""}`} variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.15 }}>
       <div className="product-image-wrap">
         <img src={product.image} alt={product.name} loading={priority ? "eager" : "lazy"} decoding="async" fetchpriority={priority ? "high" : "auto"} />
+        <button className="image-view-button" type="button" onClick={() => onViewImages?.(product)} aria-label={`View ${product.name} images`}>
+          <Expand size={15} />
+          <span>{imageCount > 1 ? `${imageCount} images` : "View image"}</span>
+        </button>
       </div>
       <div className="product-title-row">
         <div><p>{product.category}</p><h3>{product.name}</h3></div>
@@ -479,7 +495,7 @@ function ProductCard({ product, addToCart, priority, compact = false }) {
   );
 }
 
-function FabricAccessoriesSection({ products, addToCart, navigate }) {
+function FabricAccessoriesSection({ products, addToCart, navigate, onViewImages }) {
   const [filter, setFilter] = useState("All");
   const stock = products.filter((product) => product.productType === "fabric" || product.productType === "accessory");
   const filters = ["All", "Fabrics", "Headwear", "Jewellery"];
@@ -500,7 +516,7 @@ function FabricAccessoriesSection({ products, addToCart, navigate }) {
       </div>
       <div className="materials-catalog">
         <header><div><span className="eyebrow">Fabric & accessories</span><h3>From cloth to finishing touch.</h3></div><div className="materials-filters">{filters.map((item) => <button className={filter === item ? "active" : ""} type="button" onClick={() => setFilter(item)} key={item}>{item}</button>)}</div></header>
-        <ProductGrid products={visible} addToCart={addToCart} compact />
+        <ProductGrid products={visible} addToCart={addToCart} onViewImages={onViewImages} compact />
       </div>
     </section>
   );
@@ -668,6 +684,46 @@ function CartDrawer({ cart, open, onClose, changeQuantity, removeItem, clearCart
           </motion.div>
         </motion.aside>
       ) : null}
+    </AnimatePresence>
+  );
+}
+
+function ImageViewer({ product, onClose }) {
+  const images = getProductImages(product);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [product?.id]);
+
+  if (!product || !images.length) return null;
+
+  const activeImage = images[activeIndex] || images[0];
+  const canCycle = images.length > 1;
+  const move = (direction) => {
+    setActiveIndex((index) => (index + direction + images.length) % images.length);
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.aside className="image-viewer-layer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} aria-label={`${product.name} image viewer`}>
+        <button className="image-viewer-scrim" type="button" onClick={onClose} aria-label="Close image viewer" />
+        <motion.div className="image-viewer-panel" initial={{ y: 28, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 18, opacity: 0 }} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
+          <header>
+            <div><span>{product.category}</span><h2>{product.name}</h2></div>
+            <button type="button" onClick={onClose} aria-label="Close image viewer"><X size={20} /></button>
+          </header>
+          <div className="image-viewer-stage">
+            {canCycle ? <button className="image-viewer-nav previous" type="button" onClick={() => move(-1)} aria-label="Previous image"><ChevronLeft size={24} /></button> : null}
+            <img src={activeImage} alt={product.name} />
+            {canCycle ? <button className="image-viewer-nav next" type="button" onClick={() => move(1)} aria-label="Next image"><ChevronRight size={24} /></button> : null}
+          </div>
+          <footer>
+            <span>{String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span>
+            {canCycle ? <div className="image-viewer-thumbs">{images.map((image, index) => <button className={activeIndex === index ? "active" : ""} type="button" key={image} onClick={() => setActiveIndex(index)} aria-label={`View image ${index + 1}`}><img src={image} alt="" /></button>)}</div> : null}
+          </footer>
+        </motion.div>
+      </motion.aside>
     </AnimatePresence>
   );
 }

@@ -25,6 +25,12 @@ import { currency } from "./format.js";
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "2348012345678";
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL || "hello@moghene.com";
 const HERO_IMAGE = 'image-set(url("/hero-moghene-optimized.avif") type("image/avif"), url("/hero-moghene-optimized.webp") type("image/webp"))';
+const LOOKBOOK_TEASER_IMAGES = [
+  { id: "lookbook-ada-iro-buba", image: "https://www.buydfl.com/cdn/shop/products/Screenshot_20210403-090314.png?v=1617437069", name: "Ada Iro and Buba" },
+  { id: "lookbook-nara-adire-dress", image: "https://cdn.shopify.com/s/files/1/1961/0395/files/IMG_8308.jpg?v=1686039063", name: "Nara Adire Dress" },
+  { id: "lookbook-ayo-wrapper-set", image: "https://cdn.shopify.com/s/files/1/1961/0395/files/IMG_9915_2.jpg?v=1688466157", name: "Ayo Wrapper Set" },
+];
+const LOOKBOOK_FALLBACK_IMAGE = LOOKBOOK_TEASER_IMAGES[1].image;
 const DEFAULT_SCHOOL = {
   eyebrow: "M‑Oghene tailoring school / Abuja",
   title: "From first cut to final form.",
@@ -288,12 +294,14 @@ function Header({ page, cartCount, navigate, onCart, onSearch }) {
 }
 
 function HomePage({ products, categories, school, loading, error, addToCart, navigate }) {
+  const lookbookImages = products.length ? products.slice(0, 3) : LOOKBOOK_TEASER_IMAGES;
+
   return (
     <>
       <section className="home-hero" style={{ "--hero-image": HERO_IMAGE }}>
         <div className="hero-shade" />
         <motion.div className="hero-content" variants={reveal} initial="hidden" animate="visible">
-          <h1>Made for<br />the entrance.</h1>
+          <h1>Made for the entrance.</h1>
           <p className="hero-summary">Timeless silhouettes in heritage textiles, premade for presence.</p>
           <button className="button button-paper" type="button" onClick={() => navigate("shop")}>
             Shop arrivals <ArrowRight size={16} />
@@ -319,12 +327,14 @@ function HomePage({ products, categories, school, loading, error, addToCart, nav
 
       <section className="lookbook-teaser section-pad">
         <div className="lookbook-collage" aria-hidden="true">
-          {products.slice(0, 3).map((product, index) => (
+          {lookbookImages.map((product, index) => (
             <motion.img
               key={product.id}
               src={product.image}
               alt=""
               className={`collage-image collage-${index + 1}`}
+              loading="lazy"
+              decoding="async"
               whileHover={{ y: -12, rotate: 0 }}
             />
           ))}
@@ -478,7 +488,7 @@ function FabricAccessoriesSection({ products, addToCart, navigate }) {
       <div className="materials-intro">
         <div className="materials-copy">
           <span className="eyebrow">The materials edit / 01</span>
-          <h2>Make it<br />your own.</h2>
+          <h2>Make it your own.</h2>
           <p>Rooted in hand-dyed adire and handwoven aso oke. Shop heritage cloth by the yard, then finish the look with considered accessories.</p>
           <button className="text-link light-link" type="button" onClick={() => navigate("shop", "Fabrics")}>Shop all materials <ArrowRight size={16} /></button>
         </div>
@@ -546,7 +556,7 @@ function CatalogSkeleton({ spacious = false, compact = false, count = 6 }) {
 
 function LookbookPage({ products, lookbook, navigate }) {
   if (!lookbook?.heroProduct) {
-    return <div className="lookbook-unavailable"><span className="eyebrow">M‑Oghene editorial</span><h1>The next story is taking shape.</h1><button className="button button-paper" onClick={() => navigate("shop")}>Shop the collection <ArrowRight size={16} /></button></div>;
+    return <div className="lookbook-unavailable" style={{ "--lookbook-image": `url("${LOOKBOOK_FALLBACK_IMAGE}")` }}><span className="eyebrow">M‑Oghene editorial</span><h1>The next story is taking shape.</h1><button className="button button-paper" onClick={() => navigate("shop")}>Shop the collection <ArrowRight size={16} /></button></div>;
   }
   const looks = lookbook.finaleProducts?.length ? lookbook.finaleProducts : products.filter((product) => product.productType === "garment");
   const chapters = lookbook.chapters || [];

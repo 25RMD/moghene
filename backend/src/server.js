@@ -318,6 +318,8 @@ function normalizeLookbook(value) {
 }
 
 function validateLookbook(lookbook, products) {
+  if (!lookbook.published) return "";
+
   if (!lookbook.title || !lookbook.manifestoTitle || !lookbook.manifestoCopy || !lookbook.heroProductId) {
     return "Title, manifesto, and hero product are required.";
   }

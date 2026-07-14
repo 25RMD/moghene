@@ -24,7 +24,7 @@ import { currency } from "./format.js";
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || "2348012345678";
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL || "hello@moghene.com";
-const HERO_ASSET = "/hero-moghene.webp";
+const HERO_IMAGE = 'image-set(url("/hero-moghene-optimized.avif") type("image/avif"), url("/hero-moghene-optimized.webp") type("image/webp"))';
 const DEFAULT_SCHOOL = {
   eyebrow: "M‑Oghene tailoring school / Abuja",
   title: "From first cut to final form.",
@@ -290,7 +290,7 @@ function Header({ page, cartCount, navigate, onCart, onSearch }) {
 function HomePage({ products, categories, school, loading, error, addToCart, navigate }) {
   return (
     <>
-      <section className="home-hero" style={{ "--hero-image": `url("${HERO_ASSET}")` }}>
+      <section className="home-hero" style={{ "--hero-image": HERO_IMAGE }}>
         <div className="hero-shade" />
         <motion.div className="hero-content" variants={reveal} initial="hidden" animate="visible">
           <h1>Made for<br />the entrance.</h1>

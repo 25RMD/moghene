@@ -111,10 +111,10 @@ h1, h2 { font-family: var(--display); font-weight: 400; }
 .items-table { border-top: 1px solid var(--line-strong); }
 .items-table-head, .item-row { display: grid; grid-template-columns: minmax(270px, 1.4fr) .7fr .6fr .55fr minmax(205px, .8fr); align-items: center; gap: 18px; }
 .items-table-head { min-height: 42px; padding: 0 12px; border-bottom: 1px solid var(--line); color: rgba(255,255,255,.35); font-size: .52rem; letter-spacing: .11em; text-transform: uppercase; }
-.item-row { min-height: 116px; padding: 10px 12px; border-bottom: 1px solid var(--line); transition: background 180ms ease; }
+.item-row { min-height: 116px; padding: 10px 12px; border-bottom: 1px solid var(--line); content-visibility: auto; contain-intrinsic-size: 116px; transition: background 180ms ease; }
 .item-row:hover { background: rgba(255,255,255,.025); }
 .item-identity { display: grid; grid-template-columns: 78px minmax(0,1fr); align-items: center; gap: 14px; min-width: 0; }
-.item-identity img { width: 78px; height: 94px; object-fit: cover; filter: saturate(.78); }
+.item-identity img { width: 78px; height: 94px; aspect-ratio: 39 / 47; object-fit: cover; background: rgba(255,255,255,.08); filter: saturate(.78); }
 .item-identity h3 { overflow: hidden; margin: 0 0 6px; font-family: var(--display); font-size: 1.12rem; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
 .item-identity strong { display: block; font-size: .65rem; font-weight: 500; }
 .item-identity small { display: block; margin-top: 6px; color: rgba(255,255,255,.38); font-size: .55rem; }
@@ -148,7 +148,7 @@ h1, h2 { font-family: var(--display); font-weight: 400; }
 .editor-fields textarea { min-height: 90px; padding-top: 12px; resize: vertical; }
 .editor-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .editor-preview { position: relative; height: 210px; overflow: hidden; background: #d8d1c6; }
-.editor-preview img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+.editor-preview img { width: 100%; height: 100%; aspect-ratio: 8 / 3; object-fit: cover; object-position: center 25%; background: #cfc7ba; }
 .editor-preview span { position: absolute; bottom: 0; left: 0; padding: 7px 10px; background: var(--ink); color: white; font-size: .52rem; text-transform: uppercase; }
 .image-upload-field { display: grid; gap: 13px; }
 .upload-dropzone { display: grid; gap: 7px; padding: 18px; border: 1px dashed rgba(21,20,18,.35); background: rgba(255,255,255,.34); cursor: pointer; transition: border-color .18s ease, background .18s ease; }

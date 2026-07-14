@@ -41,7 +41,13 @@ import {
 import { currency } from "./format.js";
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL || "http://localhost:5173";
-const LOGIN_IMAGE = "https://cdn.shopify.com/s/files/1/1961/0395/files/IMG_8308.jpg?v=1686039063";
+const LOGIN_IMAGE = 'image-set(url("/admin-login-visual.avif") type("image/avif"), url("/admin-login-visual.webp") type("image/webp"))';
+const IMAGE_VARIANTS = {
+  thumb: { width: 156, height: 188, transform: "f_auto,q_auto:eco,c_fill,g_auto,w_156,h_188" },
+  thumb2x: { width: 312, height: 376, transform: "f_auto,q_auto:eco,c_fill,g_auto,w_312,h_376" },
+  preview: { width: 1120, height: 420, transform: "f_auto,q_auto,c_fill,g_auto,w_1120,h_420" },
+  preview2x: { width: 1680, height: 630, transform: "f_auto,q_auto,c_fill,g_auto,w_1680,h_630" },
+};
 const emptyProduct = {
   id: "",
   name: "",
@@ -60,6 +66,35 @@ const reveal = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] } },
 };
+
+function cloudinaryVariant(url, variant) {
+  if (!url || !url.includes("/upload/")) return url;
+  const [base, query = ""] = url.split("?");
+  const nextUrl = base.replace("/upload/", `/upload/${variant.transform}/`);
+  return query ? `${nextUrl}?${query}` : nextUrl;
+}
+
+function ProductImage({ src, alt, variant = "thumb", className = "" }) {
+  const primary = IMAGE_VARIANTS[variant];
+  const density2x = IMAGE_VARIANTS[`${variant}2x`];
+  const optimizedSrc = cloudinaryVariant(src, primary);
+  const optimizedSrc2x = density2x ? cloudinaryVariant(src, density2x) : "";
+  const isCloudinary = optimizedSrc2x && optimizedSrc2x !== optimizedSrc;
+
+  return (
+    <img
+      className={className}
+      src={optimizedSrc}
+      srcSet={isCloudinary ? `${optimizedSrc} 1x, ${optimizedSrc2x} 2x` : undefined}
+      alt={alt}
+      width={primary.width}
+      height={primary.height}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+    />
+  );
+}
 
 export function App() {
   const [authStatus, setAuthStatus] = useState("checking");
@@ -163,7 +198,7 @@ function LoginScreen({ form, setForm, error, pending, onSubmit }) {
   const [showPassword, setShowPassword] = useState(false);
   return (
     <main className="login-layout">
-      <section className="login-visual" style={{ "--login-image": `url("${LOGIN_IMAGE}")` }}>
+      <section className="login-visual" style={{ "--login-image": LOGIN_IMAGE }}>
         <div className="login-visual-copy"><p className="admin-wordmark">Moghene</p><span>Private inventory</span></div>
       </section>
       <motion.section className="login-form-panel" variants={reveal} initial="hidden" animate="visible">
@@ -374,7 +409,7 @@ function ItemsWorkspace({ products, categories, busyId, notice, onAdd, onEdit, o
 function ItemRow({ product, busy, onEdit, onToggle, onDelete }) {
   return (
     <motion.article className="item-row" layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 18 }}>
-      <div className="item-identity"><img src={product.image} alt={product.name} /><div><h3>{product.name}</h3><strong>{currency(product.price)}</strong><small>{product.color}</small></div></div>
+      <div className="item-identity"><ProductImage src={product.image} alt={product.name} /><div><h3>{product.name}</h3><strong>{currency(product.price)}</strong><small>{product.color}</small></div></div>
       <span className="item-category">{product.category}</span>
       <span className="item-sizes">{product.productType === "garment" ? product.sizes.join(", ") : `Per ${product.unit}`}</span>
       <span className={`item-status ${product.available ? "visible" : "hidden"}`}><i /> {product.available ? "Visible" : "Hidden"}</span>
@@ -412,7 +447,7 @@ function ProductEditor({ draft, setDraft, categories, editingId, submitting, not
       <motion.form className="product-editor" onSubmit={onSubmit} initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", stiffness: 320, damping: 34 }}>
         <header><div><span className="admin-eyebrow">Catalog editor</span><h2>{editingId ? "Edit item" : "Add item"}</h2></div><button type="button" onClick={onClose} aria-label="Close editor"><X /></button></header>
         <div className="editor-fields">
-          {draft.image ? <div className="editor-preview"><img src={draft.image} alt="Item preview" /><span>Image preview</span></div> : null}
+          {draft.image ? <div className="editor-preview"><ProductImage src={draft.image} alt="Item preview" variant="preview" /><span>Image preview</span></div> : null}
           <label><span>Name</span><input required placeholder="e.g. Adire Kaftan" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></label>
           <div className="editor-pair"><label><span>Price</span><input required type="number" min="1" placeholder="85000" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} /></label><label><span>Category</span><select required value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}><option value="" disabled>Select category</option>{categories.map((item) => <option value={item.name} key={item.id}>{item.name}</option>)}</select></label></div>
           <div className="editor-pair"><label><span>Item type</span><select value={draft.productType} onChange={(event) => { const productType = event.target.value; setDraft({ ...draft, productType, unit: productType === "fabric" ? "yard" : "piece", sizes: productType === "garment" ? draft.sizes || "S, M, L" : "" }); }}><option value="garment">Garment</option><option value="fabric">Fabric</option><option value="accessory">Accessory</option></select></label><label><span>Sales unit</span><select value={draft.unit} onChange={(event) => setDraft({ ...draft, unit: event.target.value })}><option value="piece">Piece</option><option value="yard">Yard</option><option value="set">Set</option><option value="pair">Pair</option></select></label></div>

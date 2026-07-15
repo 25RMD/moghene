@@ -2,6 +2,8 @@ export const API_URL = (
   import.meta.env.VITE_API_URL || "https://moghene-backend-production.up.railway.app/api/v1"
 ).replace(/\/$/, "");
 const TOKEN_KEY = "moghene_admin_token";
+const GET_CACHE_MS = 30 * 1000;
+const getCache = new Map();
 
 export function getToken() {
   return window.localStorage.getItem(TOKEN_KEY) || "";
@@ -13,6 +15,11 @@ export function setToken(token) {
 
 export function clearToken() {
   window.localStorage.removeItem(TOKEN_KEY);
+  clearAdminApiCache();
+}
+
+export function clearAdminApiCache() {
+  getCache.clear();
 }
 
 async function parseResponse(response) {
@@ -30,6 +37,16 @@ async function parseResponse(response) {
 async function apiRequest(path, options = {}) {
   const token = getToken();
   const isFormData = options.body instanceof FormData;
+  const method = String(options.method || "GET").toUpperCase();
+  const cacheKey = `${token}:${path}`;
+
+  if (method === "GET") {
+    const cached = getCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.promise;
+    }
+  }
+
   const headers = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {}),
@@ -39,12 +56,21 @@ async function apiRequest(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const request = fetch(`${API_URL}${path}`, {
     ...options,
     headers,
-  });
+    cache: method === "GET" ? "default" : "no-store",
+  }).then(parseResponse);
 
-  return parseResponse(response);
+  if (method === "GET") {
+    getCache.set(cacheKey, { promise: request, expiresAt: Date.now() + GET_CACHE_MS });
+    request.catch(() => getCache.delete(cacheKey));
+    return request;
+  }
+
+  const payload = await request;
+  clearAdminApiCache();
+  return payload;
 }
 
 export async function login(email, password) {

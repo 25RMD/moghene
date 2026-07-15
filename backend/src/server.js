@@ -30,6 +30,9 @@ const CLOUDINARY_API_SECRET = cleanEnvValue(process.env.CLOUDINARY_API_SECRET);
 const UPLOAD_MAX_WIDTH = Number(process.env.UPLOAD_MAX_WIDTH || 1800);
 const UPLOAD_MAX_HEIGHT = Number(process.env.UPLOAD_MAX_HEIGHT || 2200);
 const UPLOAD_WEBP_QUALITY = Number(process.env.UPLOAD_WEBP_QUALITY || 82);
+const PUBLIC_CACHE_SECONDS = Number(process.env.PUBLIC_CACHE_SECONDS || 60);
+const PUBLIC_STALE_WHILE_REVALIDATE_SECONDS = Number(process.env.PUBLIC_STALE_WHILE_REVALIDATE_SECONDS || 300);
+const PUBLIC_MEMORY_CACHE_MS = Number(process.env.PUBLIC_MEMORY_CACHE_MS || 30_000);
 const DATABASE_URL = cleanEnvValue(process.env.DATABASE_URL);
 const PGHOST = cleanEnvValue(process.env.PGHOST);
 const PGDATABASE = cleanEnvValue(process.env.PGDATABASE);
@@ -65,6 +68,7 @@ const db = DATABASE_ENABLED
 
 const app = express();
 app.set("trust proxy", true);
+const publicResponseCache = new Map();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
@@ -113,6 +117,44 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "1mb" }));
+
+app.use("/api/v1/admin", (_request, response, next) => {
+  setJsonCacheHeaders(response, { isPrivate: true });
+  next();
+});
+
+function clearPublicResponseCache() {
+  publicResponseCache.clear();
+}
+
+function setJsonCacheHeaders(response, { isPrivate = false } = {}) {
+  if (isPrivate) {
+    response.setHeader("Cache-Control", "private, no-cache, max-age=0, must-revalidate");
+    return;
+  }
+
+  response.setHeader(
+    "Cache-Control",
+    `public, max-age=${PUBLIC_CACHE_SECONDS}, stale-while-revalidate=${PUBLIC_STALE_WHILE_REVALIDATE_SECONDS}`,
+  );
+}
+
+async function sendCachedJson(response, key, producer) {
+  const now = Date.now();
+  const cached = publicResponseCache.get(key);
+  if (cached && cached.expiresAt > now) {
+    setJsonCacheHeaders(response);
+    response.setHeader("X-Moghene-Cache", "HIT");
+    response.json(cached.payload);
+    return;
+  }
+
+  const payload = await producer();
+  publicResponseCache.set(key, { payload, expiresAt: now + PUBLIC_MEMORY_CACHE_MS });
+  setJsonCacheHeaders(response);
+  response.setHeader("X-Moghene-Cache", "MISS");
+  response.json(payload);
+}
 
 function createToken() {
   return jwt.sign({ email: ADMIN_EMAIL, role: "admin" }, JWT_SECRET, { expiresIn: "12h" });
@@ -325,6 +367,7 @@ async function readProducts() {
 
 async function writeProducts(products) {
   await writeStore("products", DATA_FILE, products);
+  clearPublicResponseCache();
 }
 
 async function readCategories() {
@@ -333,6 +376,7 @@ async function readCategories() {
 
 async function writeCategories(categories) {
   await writeStore("categories", CATEGORIES_FILE, categories);
+  clearPublicResponseCache();
 }
 
 async function readLookbook() {
@@ -341,6 +385,7 @@ async function readLookbook() {
 
 async function writeLookbook(lookbook) {
   await writeStore("lookbook", LOOKBOOK_FILE, lookbook);
+  clearPublicResponseCache();
 }
 
 async function readSchool() {
@@ -349,6 +394,7 @@ async function readSchool() {
 
 async function writeSchool(school) {
   await writeStore("school", SCHOOL_FILE, school);
+  clearPublicResponseCache();
 }
 
 function normalizeSchool(value) {
@@ -532,10 +578,12 @@ app.get("/api/v1/assets/:id", async (request, response, next) => {
 
 app.get("/api/v1/catalog", async (_request, response, next) => {
   try {
-    const [products, categoryRecords] = await Promise.all([readProducts(), readCategories()]);
-    const visible = products.filter((product) => product.available);
-    const categories = categoryRecords.map((category) => category.name);
-    response.json({ products: visible, categories });
+    await sendCachedJson(response, "catalog", async () => {
+      const [products, categoryRecords] = await Promise.all([readProducts(), readCategories()]);
+      const visible = products.filter((product) => product.available);
+      const categories = categoryRecords.map((category) => category.name);
+      return { products: visible, categories };
+    });
   } catch (error) {
     next(error);
   }
@@ -543,19 +591,20 @@ app.get("/api/v1/catalog", async (_request, response, next) => {
 
 app.get("/api/v1/lookbook", async (_request, response, next) => {
   try {
-    const [lookbook, products] = await Promise.all([readLookbook(), readProducts()]);
-    if (!lookbook.published) {
-      response.json({ lookbook: null });
-      return;
-    }
-    const visibleProducts = new Map(products.filter((product) => product.available).map((product) => [product.id, product]));
-    response.json({
-      lookbook: {
-        ...lookbook,
-        heroProduct: visibleProducts.get(lookbook.heroProductId) || null,
-        chapters: lookbook.chapters.map((chapter) => ({ ...chapter, product: visibleProducts.get(chapter.productId) || null })).filter((chapter) => chapter.product),
-        finaleProducts: lookbook.finaleProductIds.map((id) => visibleProducts.get(id)).filter(Boolean),
-      },
+    await sendCachedJson(response, "lookbook", async () => {
+      const [lookbook, products] = await Promise.all([readLookbook(), readProducts()]);
+      if (!lookbook.published) {
+        return { lookbook: null };
+      }
+      const visibleProducts = new Map(products.filter((product) => product.available).map((product) => [product.id, product]));
+      return {
+        lookbook: {
+          ...lookbook,
+          heroProduct: visibleProducts.get(lookbook.heroProductId) || null,
+          chapters: lookbook.chapters.map((chapter) => ({ ...chapter, product: visibleProducts.get(chapter.productId) || null })).filter((chapter) => chapter.product),
+          finaleProducts: lookbook.finaleProductIds.map((id) => visibleProducts.get(id)).filter(Boolean),
+        },
+      };
     });
   } catch (error) {
     next(error);
@@ -564,8 +613,10 @@ app.get("/api/v1/lookbook", async (_request, response, next) => {
 
 app.get("/api/v1/school", async (_request, response, next) => {
   try {
-    const school = await readSchool();
-    response.json({ school: school.published ? school : null });
+    await sendCachedJson(response, "school", async () => {
+      const school = await readSchool();
+      return { school: school.published ? school : null };
+    });
   } catch (error) {
     next(error);
   }
